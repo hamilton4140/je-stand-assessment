@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2b3847">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stand Assess">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+<title>JE Stand Assessment</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: shop-floor field tool. Sticky steel header; phones get a bottom tab bar, a sticky stand switcher and section tabs; desktop adds a stand list rail. Report is a paper document. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#17202b; --muted:#5b6777; --line:#d3d9e0; --line-strong:#aab4c0;
+  --steel:#2b3847; --steel-2:#33414f; --steel-line:#485767; --on-steel:#eef2f6; --on-steel-muted:#b9c3cf;
+  --accent:#fcc23d; --accent-ink:#1a1400; --accent-soft:#fff4d6;
+  --ok:#1f7a4d; --ok-soft:#e1f3e9; --bad:#b42318; --bad-soft:#fde7e5; --warn:#a15c00; --warn-soft:#fff0d6;
+  --gray:#5b6777; --gray-soft:#e8ecf0; --focus:#1b6fd1; --scrim:rgba(10,14,20,.55);
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141a; --panel:#18202a; --ink:#e7ecf1; --muted:#9aa6b4; --line:#2a3440; --line-strong:#3b4756;
+  --steel:#0a0f14; --steel-2:#18212b; --steel-line:#2c3846; --on-steel:#eef2f6; --on-steel-muted:#9aa6b4;
+  --accent:#fcc23d; --accent-ink:#1a1400; --accent-soft:#3a2f0a;
+  --ok:#4cc38a; --ok-soft:#123222; --bad:#ff7a6e; --bad-soft:#3b1714; --warn:#f0a840; --warn-soft:#3a2809;
+  --gray:#a5b0bd; --gray-soft:#232c37; --focus:#6aa8ff; --scrim:rgba(0,0,0,.65); color-scheme:dark; }}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --panel:#18202a; --ink:#e7ecf1; --muted:#9aa6b4; --line:#2a3440; --line-strong:#3b4756;
+  --steel:#0a0f14; --steel-2:#18212b; --steel-line:#2c3846; --on-steel:#eef2f6; --on-steel-muted:#9aa6b4;
+  --accent:#f2b705; --accent-ink:#1a1400; --accent-soft:#3a2f08;
+  --ok:#4cc38a; --ok-soft:#123222; --bad:#ff7a6e; --bad-soft:#3b1714; --warn:#f0a840; --warn-soft:#3a2809;
+  --gray:#a5b0bd; --gray-soft:#232c37; --focus:#6aa8ff; --scrim:rgba(0,0,0,.65); color-scheme:dark; }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-text-size-adjust:100%;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--steel)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;line-height:1.1;margin:0;text-wrap:balance}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--muted)}
+.eyebrow{font:600 12px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--steel);color:var(--on-steel);border-bottom:4px solid var(--accent)}
+.top-in{display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1400px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand-logo{height:34px;width:auto;flex:none;display:block}
+.brand h1{font-size:22px;color:var(--on-steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font:500 12px/1.2 var(--f-body);color:var(--on-steel-muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:4px}
+.tab{background:transparent;border:1px solid var(--steel-line);color:var(--on-steel);padding:8px 14px;border-radius:6px;font-weight:600;min-height:40px}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab .ti{display:none}
+.chip-sync{display:inline-flex;align-items:center;gap:6px;background:var(--steel-2);border:1px solid var(--steel-line);color:var(--on-steel);padding:6px 10px;border-radius:999px;font:600 13px/1 var(--f-body);white-space:nowrap}
+.chip-sync i{width:8px;height:8px;border-radius:50%;background:var(--on-steel-muted);display:inline-block}
+.chip-sync.ok i{background:#4cc38a}.chip-sync.busy i{background:var(--accent)}.chip-sync.off i{background:#ff7a6e}
+.iconbtn{background:var(--steel-2);border:1px solid var(--steel-line);color:var(--on-steel);border-radius:6px;min-width:40px;min-height:40px;font-weight:700;font-size:18px;line-height:1}
+
+/* layout */
+.wrap{padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1400px;margin:0 auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.pad{padding:16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sec-h h2{font-size:24px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.banner{background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner p{margin:0;flex:1;min-width:200px}
+.banner.bad{background:var(--bad-soft);border-color:var(--bad)}
+
+/* forms */
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 16px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:10px;min-height:46px;width:100%;font-size:16px}
+.field textarea{min-height:84px;resize:vertical}
+.field.wide{grid-column:1/-1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:10px 14px;font-weight:700;min-height:46px;text-align:center}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:14px}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:700 12px/1 var(--f-body);letter-spacing:.05em;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
+.pill.red{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.pill.yellow{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.pill.gray{background:var(--gray-soft);color:var(--gray);border-color:var(--gray)}
+.pill.green{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.pill.none{background:var(--gray-soft);color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line-strong);display:inline-block;flex:none}
+.dot.red{background:var(--bad)}.dot.yellow{background:var(--warn)}.dot.gray{background:var(--gray)}.dot.green{background:var(--ok)}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;border-top:6px solid var(--line-strong)}
+.tile b{display:block;font:700 32px/1 var(--f-display)}
+.tile span{font-size:13px;color:var(--muted)}
+.tile.red{border-top-color:var(--bad)}.tile.yellow{border-top-color:var(--warn)}.tile.gray{border-top-color:var(--gray)}.tile.green{border-top-color:var(--ok)}
+
+/* assessment list */
+.alist{display:flex;flex-direction:column}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.arow:first-child{border-top:0}
+.arow .t{font-weight:700}.arow .m{font-size:13px;color:var(--muted)}
+.arow .dots{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.arow[aria-current="true"] .t::after{content:"  · open";color:var(--muted);font-weight:500}
+
+/* stands layout */
+.grid2{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr,64px) + 12px)}
+.slist{display:flex;flex-direction:column;max-height:calc(100vh - 220px);overflow:auto}
+.sitem{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
+.sitem[aria-current="true"]{background:var(--accent-soft)}
+.sitem .bar{width:10px;height:34px;border-radius:3px;background:var(--line-strong)}
+.sitem .bar.red{background:var(--bad)}.sitem .bar.yellow{background:var(--warn)}.sitem .bar.gray{background:var(--gray)}.sitem .bar.green{background:var(--ok)}
+.sname{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.smeta{display:block;font-size:13px;color:var(--muted)}
+.spct{font:500 12px var(--f-mono);color:var(--muted)}
+
+.sticky-tools{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr,64px));z-index:20;background:var(--bg);padding-block:10px 8px;margin-top:-6px}
+.switch{display:none;grid-template-columns:44px minmax(0,1fr) 44px auto;gap:6px;align-items:center;margin-bottom:8px}
+.switch select{min-height:46px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);padding:0 10px;font-weight:700;width:100%;font-size:16px}
+.switch .nav{min-height:46px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);font-size:20px;font-weight:700}
+.shead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.shead h2{font-size:22px;min-width:0}
+.subtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.subtabs::-webkit-scrollbar{display:none}
+.subtab{flex:none;border:1px solid var(--line-strong);background:var(--panel);border-radius:999px;padding:8px 14px;font-weight:700;font-size:15px;min-height:40px;white-space:nowrap}
+.subtab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+.subtab .n{font:500 12px var(--f-mono);opacity:.8;margin-left:4px}
+.progress{height:6px;background:var(--gray-soft);border-radius:999px;overflow:hidden;margin-top:8px}
+.progress span{display:block;height:100%;background:var(--accent);transition:width .2s}
+
+/* measurements */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.mfield{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:4px;min-width:0}
+.mfield label{font-size:14px;font-weight:700}
+.minput{display:flex;align-items:center;gap:6px}
+.minput input{flex:1;min-width:0;border:1px solid var(--line-strong);border-radius:8px;padding:9px 10px;background:var(--panel);font-family:var(--f-mono);font-size:18px;min-height:46px}
+.unit{font:500 13px var(--f-mono);color:var(--muted);min-width:28px}
+.mres{display:flex;flex-direction:column;gap:3px}
+.mres span{font-size:12.5px;line-height:1.3;padding:3px 6px;border-radius:4px;background:var(--gray-soft)}
+.mres .pass{background:var(--ok-soft);color:var(--ok)}.mres .fail{background:var(--bad-soft);color:var(--bad)}
+
+/* checklist */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.fchip{border:1px solid var(--line-strong);background:var(--panel);border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;min-height:38px}
+.fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.group{margin-top:18px}
+.group-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.group-h h3{font-size:20px}
+.group-h .std{font:500 12.5px var(--f-mono);color:var(--muted)}
+.item{padding:14px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.item-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.iid{font:700 13px var(--f-mono);color:var(--muted)}
+.cite{font:500 13px var(--f-mono);background:var(--gray-soft);padding:2px 6px;border-radius:4px}
+.sevtag{font:700 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px}
+.sevtag.red{background:var(--bad-soft);color:var(--bad)}.sevtag.yellow{background:var(--warn-soft);color:var(--warn)}
+.req{margin:0}
+.how summary{font-size:14px;color:var(--muted);cursor:pointer;font-weight:600;padding:4px 0;list-style-position:inside}
+.how p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.auto{font-size:13px;padding:4px 8px;border-radius:4px;background:var(--gray-soft);align-self:flex-start}
+.auto.pass{background:var(--ok-soft);color:var(--ok)}.auto.fail{background:var(--bad-soft);color:var(--bad)}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;max-width:440px}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--panel);min-height:50px;font-weight:800;font-size:15px}
+.seg button:last-child{border-right:0}
+.seg button span{display:block;font:500 10.5px var(--f-body);letter-spacing:.02em;opacity:.8}
+.seg button[aria-pressed="true"][data-s="C"]{background:var(--ok);color:#fff}
+.seg button[aria-pressed="true"][data-s="NC"]{background:var(--bad);color:#fff}
+.seg button[aria-pressed="true"][data-s="UV"]{background:var(--gray);color:#fff}
+.seg button[aria-pressed="true"][data-s="NA"]{background:var(--ink);color:var(--panel)}
+.extra{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:8px}
+.extra textarea{min-height:46px;border:1px solid var(--line-strong);border-radius:8px;padding:9px;background:var(--bg);width:100%;resize:vertical;font-size:16px}
+.extra select{border:1px solid var(--line-strong);border-radius:8px;padding:8px;background:var(--bg);min-height:46px;font-size:15px}
+.itools{display:flex;gap:8px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;color:var(--focus);font-weight:700;font-size:14px;padding:6px 0;min-height:36px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:22px;margin-bottom:6px}
+
+/* photos */
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.photo{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;min-width:0}
+.photo img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--gray-soft)}
+.photo input{border:0;border-top:1px solid var(--line);padding:8px;background:var(--panel);font-size:15px;width:100%}
+.photo .pf{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);background:var(--panel);padding:0 8px}
+.photo .pf small{color:var(--muted);font-size:12px}
+.photo button{border:0;background:none;color:var(--bad);padding:8px 0;font-size:14px;font-weight:600}
+
+/* report */
+.report-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.report-scroll{overflow-x:auto}
+.report{background:#fff;color:#141a22;max-width:8.5in;margin:0 auto;padding:clamp(18px,5vw,.6in);border:1px solid var(--line);border-radius:4px;font-size:10.5pt;line-height:1.45}
+.report h1{font:700 26pt/1.1 var(--f-display);color:#141a22}
+.report h2{font:700 16pt/1.15 var(--f-display);margin:20pt 0 8pt;padding-bottom:4pt;border-bottom:2pt solid #141a22;color:#141a22}
+.report h3{font:700 12.5pt/1.2 var(--f-display);margin:12pt 0 6pt;color:#141a22}
+.report p{margin:0 0 8pt}
+.report .tw{overflow-x:auto}
+.report table{width:100%;border-collapse:collapse;margin:6pt 0 10pt;font-size:9pt}
+.report th,.report td{border:1px solid #b8c0ca;padding:4pt 5pt;text-align:left;vertical-align:top}
+.report th{background:#eef1f4;font-weight:700}
+.report table.uvt{font-size:8pt}.report table.uvt td,.report table.uvt th{padding:2pt 4pt}
+.report .rbar{height:8pt;background:repeating-linear-gradient(-45deg,#fcc23d 0 8pt,#141a22 8pt 16pt);margin-bottom:14pt}
+.report .kv{display:grid;grid-template-columns:minmax(110px,150px) 1fr;gap:2pt 12pt;font-size:10pt}
+.report .kv dt{font-weight:700}.report .kv dd{margin:0}
+.report .r-red{color:#b42318;font-weight:700}.report .r-yellow{color:#a15c00;font-weight:700}.report .r-gray{color:#4b5563;font-weight:700}.report .r-green{color:#1f7a4d;font-weight:700}
+.report .rphotos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6pt}
+.report .rphotos figure{margin:0}.report .rphotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #b8c0ca}
+.report .rphotos figcaption{font-size:8pt;color:#4b5563}
+.report .small{font-size:8.5pt;color:#4b5563}
+.report .sign{display:grid;grid-template-columns:1fr 1fr;gap:24pt;margin-top:24pt}
+.report .sign div{border-top:1px solid #141a22;padding-top:4pt;font-size:9pt}
+.report .mono{font-family:var(--f-mono)}
+.report.pdfmode{width:7.5in;max-width:none;padding:0;border:0;border-radius:0}
+.report.pdfmode .tw{overflow:visible}
+#pdf-host{position:fixed;left:-10000px;top:0;width:7.5in;background:#fff}
+
+/* modal, sheet, toast */
+.modal{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal .box{background:var(--panel);border-radius:12px;padding:20px;max-width:440px;width:100%;border:1px solid var(--line)}
+.modal .box p{margin:8px 0 16px}
+.sheet{position:fixed;inset:0;background:var(--scrim);z-index:55;display:flex;align-items:flex-end;justify-content:center}
+.sheet .box{background:var(--panel);border-radius:14px 14px 0 0;width:100%;max-width:520px;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px}
+.sheet .btn{width:100%;justify-content:flex-start}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;z-index:70;font-weight:600;max-width:calc(100% - 32px);text-align:center}
+
+/* phones and small tablets */
+@media (max-width:900px){
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .switch{display:grid}
+}
+@media (max-width:760px){
+  .brand small{display:none}
+  .brand h1{font-size:20px}
+  .brand-logo{height:28px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:35;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--steel);border-top:1px solid var(--steel-line);padding-block:6px calc(6px + env(safe-area-inset-bottom,0px));padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  .tab{min-height:52px;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px}
+  .tab .ti{display:block;font-size:12px;font-weight:500;opacity:.85}
+  .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .extra{grid-template-columns:minmax(0,1fr)}
+  .seg{max-width:none}
+  .mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fields{grid-template-columns:minmax(0,1fr)}
+  .pad{padding:14px}
+  .arow{grid-template-columns:minmax(0,1fr)}
+  .shead h2{font-size:20px}
+  .subtabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;overflow:visible}
+  .subtab{padding:6px 2px;font-size:13.5px;min-height:48px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+  .subtab .n{margin:0;font-size:10.5px}
+  .switch{margin-bottom:6px}
+}
+@media (max-width:380px){ .mgrid{grid-template-columns:minmax(0,1fr)} .chip-sync b{display:none} }
+
+@media print{
+  @page{size:letter;margin:.5in}
+  body{background:#fff} body::before{display:none}
+  .top,.noprint,.view:not(#v-report),.tabs{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .report{border:0;padding:0;max-width:none;border-radius:0}
+  .report-scroll,.report .tw{overflow:visible}
+  .report .pb{break-before:page}
+  tr,figure,.keep{break-inside:avoid}
+}
+@media (max-width:1100px){ .brand small{display:none} }
+@media (pointer:coarse){ .tab{min-height:46px} .btn.sm{min-height:42px} .linkbtn{min-height:44px;padding:8px 0} .fchip{min-height:44px} .subtab{min-height:46px} }
+@media (max-width:760px){ body.typing .tabs{display:none} body.typing .wrap{padding-bottom:32px} body.typing .toast{bottom:16px} }
+.typepick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.typepick button{text-align:left;border:2px solid var(--line-strong);background:var(--bg);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;min-height:84px}
+.typepick button b{font-size:16px}
+.typepick button span{font-size:13.5px;color:var(--muted);line-height:1.35}
+.typepick button[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.typepick button[aria-checked="true"] b::before{content:"✓ ";color:var(--ink)}
+.typepick.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:760px){ .typepick,.typepick.two{grid-template-columns:minmax(0,1fr)} .typepick button{min-height:0} }
+.guide ol{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.guide li::marker{font-weight:700}
+.precheck{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.precheck.ok{border-color:var(--ok);background:var(--ok-soft)}
+.precheck h3{font-size:18px;margin-bottom:6px}
+.precheck ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.precheck button{background:none;border:0;padding:6px 0;color:var(--focus);font-weight:700;text-align:left;min-height:36px}
+.report .notice{border:1.5pt solid #141a22;background:#fff6dc;padding:8pt 10pt;margin:8pt 0 10pt;border-radius:2pt}
+.report .notice p{margin:0 0 4pt}.report .notice p:last-child{margin:0}
+.report .rlogo{display:flex;align-items:center;gap:12pt;margin-bottom:10pt}
+.report .rlogo img{height:38pt;width:auto}
+.report .rlogo span{font-size:9pt;color:#4b5563;line-height:1.35}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<noscript><style>#top,#main,.tabs{display:none!important}</style><div style="font:16px/1.5 Arial,sans-serif;max-width:640px;margin:24px auto;padding:20px;border:2px solid #b42318;border-radius:10px;background:#fff;color:#17202b">
+<h2 style="margin:0 0 8px">Open this file in a web browser</h2>
+<p>The JE Stand Assessment runs inside a web browser, and this viewer can't run it. This usually happens when an email attachment opens in a preview.</p>
+<p><b>On a Windows or Mac computer:</b> save the file to your computer, then double-click it to open it in Chrome, Edge or Safari.</p>
+<p><b>On an Android phone:</b> download the file, then open it from your Downloads folder in Chrome.</p>
+<p><b>On an iPhone or iPad:</b> this file can't run. Use a computer or an Android phone instead.</p></div></noscript>
+<header class="top" id="top">
+  <div class="top-in">
+    <div class="brand"><img class="brand-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARAAAADACAYAAADMQzyOAABEqUlEQVR42u29eXykV3km+rznnK8WLe72jmkMMTYYtxdsd3trS12Sl0C4hCSQ6mRyJ+Qyd4AkEPb5ZSZkotZlmMz9TZKZLEDCTe4NISQTFdkYJrFjg1QtddvYLbu9tW1ssNls4zbeuqVS1XfO+9w/vq/Ukrqk3rRUyd/5/YRwd0nq0vd973nf5zyLIFtttUjIenxfIuDRXjM0BLNz59Ffl63OuJ7Zyla2srV0Icl+BW3SeYyUreyoBL+r7+clb3+N9TADiuWcC8XjvGCc83VzL/bC74kl/vuk3lPyPSgGkYd+IN+/+z5yyIgMa4vOy/jxvj8zxryBygYIs/B9HOvPXPj7Wvj1XORB4PK950V/RqvXtbpGx/pzsMQ1a/V+juX3s9jPI0Br4TTgSafmPTJY9S57dNuskAA/bXujbVAC1nT8m4EF/HSIc4YHAAA7h48YW4aHodjVvwngL5qisfDZ1taWKxDodeDz9ZoMVj05ZLIC0h7PmciOSuBI2Xo+vRkHG8HHSolVOvt9ibq8MQDvlr49T5EQEczrPnZeXJZhVOCFF7vImnjKeyFMNmO3JT4XXEOsUkYBAGNjWQFpizUEwTA4c+Z3z3XIXcCYFhRCOn0fJuGMRT3cn9xwJQtU/byXnPmspC31lciJSAyIiMluijaFPGIaEd4LADhwFrML1Q5rZ1kAwNnoElc0xaAMIuuiiU+Kg8jeRV9x4Kyk06BclQ7a2fDSnlsBrRUT6uFQLNwPAChXNCsg7bDGkl3YULbCGghE18d2JUZrXoMi2bEGBo54X7KjErjn2iKBy+AJiGQFpE1LiOQMCDxefPrVP0jH0awDaY8CkjxYBK+GEmTnXxcStJGIBjyTs+Gx5E+H5+EaHEpPWhq5HxPhazXWrANp391AYQFQ7pUdlQCUDQBkBaQdANThYeW+m7shsnnd7MJCRWRA8CHp23OQI2V7BDCajm7B6OW2yznluhnd1u3NSuHd87rm7Ley9kcVAICD0xcAOFdjXS/8HEIEArl7LljaanQTyBYYWYyika22uJpidUYZAfcAmMWusgKy5uNLyQBAgH2z7bJGwSBYJwCqVwC4K8E/zjqyOAxUQzrubEFgRmxs43HURSIaeACCbwIAyhXNCkg7XSTl1vWyCxOgEbGhrjWv8UPJuFLhQs2PCMjxvlMV3IyGJpzVbLXtOCqC/dI/8ULz2mUFpB1WuguL4ArE6+YhoknwjycLvfF3AADDCwpjJQHh4qBvstac6b0ywz/aeE9wAjIdX8ZKtvkXWQFZY+WtCPjyrr4zSV5Ev17aeCpyBgDul62TMUfKVhZ2VikmYsRuMQUjEITsjmjjcTQQ0gRQ54yjWQFZ0zUkAFCgXORy9vTguX52YQHIlEDWCkCdxebYBFCz1b58Hhtq3lvhAwvH0ayArOUaG0vO0o1cgYIBhOtlFzaoK2QBYj/v6Hqw6jkCK5DL4RVz1bfZais8S21kAOJJ2PDtheNodtHWcqUPFqlXrZcDTBK0xhg/oy+4gtk/F7Fvrp1DaZd1zvWbCF7ABhMUKFvteUUjASgPyrY7a+SQmTuOZgVkrRW4oyUnwGUJgLoergcpOYEIH5Vrqs/MReznKnABwAdc7PK2JwTVDEBt41vVCNDUM6Vdc1ZA2kGBCwBGzyXlAjZ0nTBQoXAGFOxbiNhjAYBKyJVwJvmabLVt+UBDYaGTrcbRrICs1Up3YVi51BVMMXCdEMgIgRLKJRS4qajOGFwFzQhk7a3ANcbXwxRSBe7OhypZAWmLle7CXnUrnFk3NG4RMVoLCiyhwJVh5Z5ri1RclrBVM/yjncdRQB5H303fB4Dh4fndYlZAsLYAqgBb1ssunCL2osqnchsKj6KVApdDBgAazJ8vFuf6mJTsPmzrcRTCfSLDSpbtkcdt2VpLALWHikvXzy6cIPYi2C+X3zbFoSOtCcdSEM6qv8x2OQcwI5C1+xzTHEfHjuTzZAVkTS5KQiBrRPEFYmVTiIl1sgsTRg47kA2UjnhPA83NTc3WjEDW/grcMB0IKy0B1KyAYG0JZDbYN9suZ8h1swsLYoXySMrzEQpc4Er4DEBtawWuE6Hyh9Mv6iMAjuDzZAVkrerHYRr3Vesp5cuI2DCj005w/5IK3D3XnkbwTZkCt80VuDkDMfLoxrfPV+BmBWSN10BTgUtcuV58MEiqiQwAPAFvvwtgcQWudxdZa87260n7sx6hOiugHqnAzQpIGyhwubd0BoELGSu4HnZhAREJCDyQ6FyWUOBSrpCiXU/an3V6BkOIxeTcrjkrIGu9mrvwlG62zpwW/LqhcacAKhe3MEwxEQJXZ+7Jbe7nImJDLYQg/r60a9asgKB9CGSgXCWF5aVxG7O2iD1mFAosithDKppqf96MQDBT4Lavo1xkQPK7uXzj27MdZlZA0D4EMssty0b9EJBEHJQvmjU4Gm0i9r4RXoxseBjAEYg9h5CoOHNmEwSZArfdB20rkMQQarrlOJoVkDVW4OryKHBJBhsZEeB2UBpikgd6bTwz5WFsu+MAh4aOzLZtKnC9v8TmTVcIzBS4bQ6gzipwy4sbQmUFBKuvwJ3R+HUQvJ7xye3CqlTX7Wxc19sJftN12bN8vCaYCmEAKu8RATEwZhYb3QS4EpFJik622pVAZhArGCQ5gamcxayAoI0ycJ29xBZs8WR8MJJjU0Go6wEI/5MY+VmNlWsxFpCzGbh34ygKXIBXgRmBrN0zcP1MmIpD6qi/QIGbFRCsbQYuyK1wcnIAqkBt3ho/4/8PAFfaDdEmjXVNkt2MiNVa0EB/fysFbnJ0Pax8olSg4BLUMwJZWytwI4FAHi/+6DXfBwAZXvw+zS7iqhaQ5ChMjJxUkBJB706JnJ/yv5//0aZbhfLv9ZAnIHatPDM18Ac55lpm4GJn8j4b3wtvFMhrQpwRyNC2dgxII0lxv+yoBI6U7dLmt9laPQLZMJSjpR6Cl5xoBgzJ4ArOhYPxvVFp4iPh7Gd+zfW4szReKz4JiZxAjDwog9VDZAsANRXVWeHltttGzAhk7Qz0A4Kl+TxZAcGaRThA+AYxsulEIhwIqHFGQqwvex9+gV/Z0kXgozoTuIZ2iAmBDJxs5Zk5Py3GZBEOnZCBOx2gTUf9FoZQc5fLfmOrqsDVIHyzLTrjD8VB5HhHDqqJjGvU/IcKg3c84qv973fd9rV+yp/A91pGALWhUOE9ixLIZtP3eHnnK3AZyHVLXqexAvX6XBT5h1uOo1kBWfMW8WqYxZl9S4wu3vVGzh/0n8uXdn+Be64t+pgfgCfXkpBlRIyf0Wln5D4ARyD2s9qf0dIZnmHz7OjWgSWEBFzRWbh12kUpgW4HHpj5rmy78/nFFLhZAcHaZOCSEL+LlyMxEJLjwz2s84fiu1137RMkJOyK3uEK5tIwo7EIorVS4LqCNX5Gn0DfOUtk4FZCbMOFzpozfIcCqCTociI643+HwH0AIlD0CBBAU2BAjwIYzH3dwtfP/fO5r8cSr13qZ2CJ7zPnc4DSNkJOgceO9feSFZDVVODuvu4sEXkjUgXusfQNJNjEPZy1725Si3nW0x+BABSaNXseBYQzIPz9IgliLzsqoaUCF7hSCgaY8gEQ14GnExJiTs8E+7s9g9Vn8Mo4kWFWQNAuCtxKQLAXGSune68qcmwnMGIYTM66xsHGr7obxh9JuphnbrI5e22oqa4V9jEXtDcwdx2DAnfrbOxDh/UfBNTljAl1fbz7wIHnOVpy69ywRkWGNetA0F4K3BjYEhUMMKV6LCdgSoaoJ3L6cvyZ/A17vsS9WyKRydiP8WPiBIzJNX0aKRaNABrdtyiAioqSJRfGwxWdC6CScAI2+IDs2N9o2Wmtq1XFsYcgZwurpsClHHMGLskQFawNU37S0H6CoyWHLZOeu/u3IWduCrWggrXrPmYVuHW+4CgPtVTgNkG4PWYTKRecrPZnrb1OZt3Jj8KNeCWtrICskgL3wZHNORG+OWGgLj2+kKA4IyHmy77Od8tgdWbym4dEBIw9P27z1pBrfJg465nJR8z2iQMtEfvUPAneX+KKJ6f9WWtuBGcC0ORGHDiL2Z2dFRCspgL34ldvPBfA69ngUc24RBDbSEyI9QOFmyb288HNua3vn4w5tv1SY+XtOu3XGvs4vCsD9xBYMgM3CLectPZnjTutEOvzdecXdSfPCki2sJIZuJ5ymS24fNCld2GS3nbbnK/5z+YHJ/6SoyU3duBMBQAv/KjN25yyTaTwSQbu4grcsYTFqJTOzcBNOy0Aj/Zsu+NAq7CsrIBkCytuYQhz1F1Yleq6nAvTYdJF4RMjI2WLA2dxYLAaOLHtfDH4OZ0JayKaW3j0IhCrM96jCaC2UuAOJxm4Iry4gyMcktQvwWTidVLKnpmsgGD1Fbjk1qUUuCRoI4MQ60vWmH8t2+6slcsV4sxnRQB6bz5ou12XKlXWeCeXZgYu5Qe54kxrBW5T+9PABSI4t6MVuAoQuCu7mbMCsjYK3H03dxPYvJQCN+F7GIPYf0Curz6Scg2IsapO7bl2E0R+SacDjwbArs6WnGbggg/J1snplhaGqaguOPdmW3CuUxW4AnGhHkIQ3n8s4rKsgGQLy67AfWnmQhF59WI0boLedjnnp/wfu9KeL3G05GSw6oGykWFoLrbvdae4U1XXxjBoMc9MaR5rDiylwMU1sNKpJ2hqIwGV38+9sFinlRWQbK1wBm4QbrFd1rYKUtJU5xKmw6TL+Y+RQ6apmwEqyvG+UwXmvVprj+5j1gHVE2p071EVuJQrOjd9j0RkIEYekHcs0mllBSRbK34bKlr6YJCgdYLQ0Jc8+W7ZdmcNGE40CGMlKwLGKr9ke+yrNVaVNrheiWemMaEWah5LE8he3tV3Zodn4M6Pd1yi08oKSLawIgpcQGBwBWIeEeEghsFE1oaYHyxsn9jP0ZITgZIQDFQD993cLeSH0NC1NAw6QkAnTgDw8UKagbsYgaxAucg6c3rHZuCmnZZbqtPKCki2VlKBi9HS2QDeiFjn0bhJetsTOT/j/7jJ90hwDwAoGxEwHKz/nOt15/k26T7Sf3iAE0/Kfc0MXCxydG1M52bgkqA1xvjpUMMinVa2sgKClc7A9UY3u8hunLsLK1O+x6H4HucO4x5N6jtQUf7JlgjKD8OT7RAjSzCQVBeZCD3OiVlCF5Lu1FRu7djrJ4k7OYSPo1j73rGY62QFJFtYbgIZqVcgZ2Z3YTKxjQuxHgxYgHsAAJPuw1/c9Q7bZS/zM+GYpf8rsQuTiEnQFZ11RWc08NHwXOM3rW18kUhGrSOevTR9D8BlaCjaBvw9zoqJSADKPtk6GQPl7FnJCghWX4ErZiuY6F8IUAyDzVuDun4g37/7oSbuMft1OyskYRD4cazR2QXBQDC4nBHX4yIYNEIt/E9f13caG1/h+nZ9Wrbd+bwAXLgrcyi5p2ZQ/zEB3qCxdiiFPWkGKdw7L9MnW8j8QFbj/ttRCfynt+a9HEqMhBNPsth2uZyf8p+PBie+OB/3AJo+E/HN/T9u8+a6UPOrJtlP8nSpImJd0VkACDPhOxL0fzgrX5Jtux6Yfe1oyWGgGlq29BeXBajAmehi22WLvuaDYM2FfyemwK0HQPXeDEDNCsjq3ntDMDIMrfccep2DJBm4JF3B5sK0v8dF/iMcKVsMLDClKSeGxPT8mOQFBLjS2x7BAIDOGYeiSyz96/p1qv65rRe+Ijff/lKzuDWBRJHDRW9RALWpwEXn4QYk6CIR7/W5qBjvzwDUbITBWmTgWuUltmhzgeqNM6KBB0Oc4h7lzfPaf46UrQiUu/u32by5Kazgzp1gGwwk6PLWuqJzQfmMTofPGMNrbN+uG932iS/Kzbe/RJYth2BkRyWkjutL17RUgUtia8cSyISKyEAoj8o1d/8oA1CzDgRrkoFrZGu6CweTN65x0H8gf2MT9xiev4uXNxMAQsyP2V5n44aG5c5gIqEAaYxYU3QWDUWI9RsW5gu2m1+WK8cPpK8zQFmAiopUAgGZHbeGgSR97kjPzNkM3Ftv7vaYubiDIxwSC0NhMr6MlSywRNeVdSDZwjITyNKtdwvqStft8n7Kfz7fAvdIHrzkgayPbb8UTn4yTHs1y2QYRIKzR7AFY1xvZCnygtb8nyOEQXv9+HXSV/2cXDlxgCNlm0ZTqkgliIAcKVsBKINVz9FrLwjV/k9j923dh4+ccYT2p1GsnS/CTR2swBUEQpoK3IEM/8gKyCoTyA78w7ZeEhfCiYTpMOlmih9LcI8jjz1R2Z9GH+iHbcHmuAyGQQSUZLAG4rqcdXlrQqz3h5r/d9bKlbZ/4j3Sv3ssDX1yZGK92OwsOARDJqPLd0euLfqJvo9qT36SwHbp23OQQ0NG0FqBa4HLbNFZgtqhClwJ06ER1CReJ9icFZCsgGBVFbinbHQXmMi8OjT0YGjoL8lbbptaiHvMHnuWK8qJbecbJz8XaoHgiXUfxGy3EZwT43ojq+CM1sKX4fm/2cL0Vnf9+O/IddUnOVpyTWBUBqu++e8i03FlGJpgMn1v37Qp2mNz9vdMZE6Bwa1H04UIZhW4HQmgWieG4A9ylEyBm2Ega5OBaxGuMBsKUXiu9p78jXta4x4AsLMsIhWNq/YDrtf1xAfjcLzjS8JVZTAQZ7qchQKhHh6TKf/X3ti/LlxffeTwa8s2wTaOnOkTILcSgKqvj153ictFO2HkXUaAeFrjiIgY9L5FjzXHBpSsShiXLR0NoOasFc8HZbA6sxjek62sgKwQ/pE8WCrmJ3Cg8WU3MNffo0UwNSo6NbHt1aJ4t057leNgbaajDl1kLHLWhVoIOhNuo/Iv7CnFr8jlt03NO4LdkYCiR36fIYPKfpEdlcDbtmzQfPcnaPFhUzC9/pDX9Jg3CjNa82IeBICdLTNwh5U39p0J4sJZBa50aoRDqsBNN4Tsxs4KyCrFAVZCegrxgrX8dQ7BtMQ9AIyNlezgYNX7Xea9ttue7g+Fo+bcpoSvAMC4ojOwAq3576MWRoKYL+b7qvuarx0dLbmBsaouFoJEQhLbgKQz8hN9/zqI7LQFe74/5OkP+SAilqRKJGDQxwvdte+nOI+2TN+zcpExcppvdLYCF8DdGYEsKyBrszZqIfb+09H1d7ywGIcg6T6qgaOljQH6XtSVIrBH7TacschbF2pBtR7GCflzOzPzj3Lz3T+axVR2No9gFz96JA+PK9y9/SolPmVy5i0IhJ+KPSC2GR0hAoUVAyS6kETnsuB7NyMcPK60vRaI447LwG16nfhamPZqMgVuVkDWqAu55ms/ArA0AWmsZGWw6v04f8l22U3N3b4VvRwi4grWIDII0+GA1MM/qOLPc6XxPfOxjc0UGVYMVxZ/SEbKNmGTVgJvv+ZsLeR/Mwh/2eas89M+ACIi4ub2Dpztrnj30bQ/FG7t2AgHkOKMSODjBeD7aYRDVkCyArKGfiCLjQ5IDIPCS7UPooF5hkEkFQK11jjpSglfDd0Lzy/aSEbkml3PNJ9QnQVFl85qJWFQKSc4x0jZ+omn36eQT5qi3RSmPLw/soDN1YVoXWkpk63a+mb6HkdLLiC8ORkBpBMFdAorhuA+Gax6smyXKsbZyo5xVxALWeIIs5IaBr1c22G73QVxXSmAmSV85Yxx3c4p+bLWwpd8zB+3fePXuOt3/YFcU32mSfhiirks9bNmj2UFKjsqgbv7bwjnPDNuC+6zxsgmPxX7RHPTung0k9nU649QmHm0ZVufpu/NGD0XlNdrrJBOvbcEEEGmwM06kDZe5Ypy75bIT8mHEagi8AByLj2C1UZ4mFP+Ly3lr6V/1xNzC0Gigj22ZPi5x7K18b7X5yA7YcwvWgf4qRBDYOVoOEXzWDPow4vqQmYVuHq5zUddvubXzMPkZBW4aCgUuJ+jJfdYrWg5WkI7WkUsBoxnBWS9jzajJSdS9XG1620mL5cipnGnRLlwyNdCLdxGw//PxfYWGazOzD2CbRaCYxufhkzyNcOBI9cWwznRhyHy70zBnOanAiFUEYmOSxdCWVwX0nQlU2xBJMAMtNO6WwLqcmJ8g09F2yd2pUUy079kBaS91s6xqnIIJgh2mm5nwovxt6UWRgL0L/P9ux+a57mxxBHs4thK2YgMBwCId/X9tFr5v2zRXcrpAD/tvYi444zGFCggTWOdVrqQgQEFqhCRKzsWQCWETKwM42rfb/hq0kHpnFl/4f+f+xmHQ+xWBFdIfw6tFRNUX7DPnPPZduhCshlvVYHVhNUYV/vfIoa/BeJzNtf4ilx718tJtwELlBPC13HSwOeS1Ti2/VKNOGys+RkA8PUQADEnzMsQBEteKdsn7m96nSwEizla6vE27HeRPbetTKCPH7uC6XLt+WQogR4H/8OZu11p4hoMJcmHWQeCVwqwmlCinZr7pFS9ft4R7M4KZQcCUDnuogQMU6TqX7zl2tN6u6OPB8MP2Zzt8dM+8RM8QWXvrLFOzO8g8okuZCeIYSzQ/gwTES4QlU0da2E4G3AO6lTcri7y3hlxRnCrAORAyWK4mhWQV1whGaw+0xw3juUI9phYpLv6flGs2WmK9vXhkIevNceVk9eFMPYPyrY7ay11ISnVOwS93PY44w/FQaQDLQwPdyDSrgQ4goJAq5R97cKSzQrI2gB26UnGCRQOQDBasgnLtOobY9uvsw6fMjm5ETHhDyYPsCzPQ0Akov3Jo+lCKNwKaZoRZ2tlcmrEhpqvB0HiT7tAj4SMB/IK6UBOUOY+z9yn2n9OmNj+hybiLlMwN/paCN6rLuvuTxjECpHWBDIAaOb4CnBF4kCW3VMrlggYGQDyZP60558EAAwjKyDZOjaTZo6WXJPt6cf7Pxgc7jFd9oP0sH46YZEuJ/diNgO3Hqac0QcWV+CC2NX/KhKbuSB9L1vL2oIQkQEED8gl+xvNzSQbYbK19LjCshGpBAxXlRP9P67kp2yXvRozisPeISuBOZCSM8KafAvBPrWUAtfb8Cbnoo0+EQRmBWSlcmoEAJZIBMw6kGzNU8sCFKmE2te2nR8m+v8CVm41ObnaT3nvPWlWEqxMdCEAcJ8MVv3YWGnRDFxRcwXypiMzcDvK6qgWQLZX0HfWgbQfWGYO+4pc1h26NnxUjHzM5Mypc45l3Yrv8xSCgBh8AwAGsIQCl3IVmJCxsv5jxYK+bfB8waltK5uBrANpI/Vu4tGReJHGE/3vCt0bvmG73acMcWp6LGtWUWPiWFdYkXuOpsAVk2bgSoZ/rJjNQE4A8FsYqP7w8CleVkCyNQeMFKkEjm2/NOzu/0cXmS9bay72B2PvAymryE1oKnCD1+dAfWRJBa4Lr4XivFSBmxWQlRonkxOYe0RAsH2CvrMC0iackOlq/7lhT//vB8d7TZd7h59R+kZQiBgIlaCf98EkALtpAZDEOIBJDsxJ7k5CRc5ARB6U/onWrmpp+p4jLrMFU1QyZNKIldtgkhul/YK+MwxkrW8MANxTelPw4f+myjUgn/Uv+wLALmMkb5wAziIlaR0+JWXyDUAkGglN/1uBoImVGZhKxIiFBC9pCsggknw+/K1lVoEL7ltUgZvexIZyFXIGqAdmV3SFdnkRE2qBatKg71S8mBWQzHSIJAQNPGk39ezAvls8Xn9TD2amuwEUQbPRx9yIWHtFeJpSNljKRiVPB7BRRE4H0EvhKaBsAFCAoFuALmdF4ERgE4ec2QLEw4Xm8GcAgVAyEdNSCE+KphaGSyhwg3CL8eTheAlko8wKjJPe6zNRd1fb5dRkBaQtnMsS749k3f4SgJeOW1A3+dUCGlEBwfY0gt1gJXT7umwUMaeAugGUM8Rgg5KnC2UjhL0ATgXQC6CHRDeAAiBFlzMRYkUw8mAyriwS4XDn1af4ulyJROrrRGZrUnImw4TJ0qIDSmrZ3FObuaWH8wvQK5tbQsIZoccDsvX2lw6bRGUFJFuLjDSp6lWwcyiJvSy3mHsPnEWUK0m/kAjcptOP54+Xb/Ls2LPFswq2e6YRdxWEvXFDN4phLnfaOY8AwBGS8Z3pYx5H54qgEWr+OVLyEOYEEjkrBlYEJhX1S4ueJDHfmD+GcU6H1Iza06QrSgexw4gAF9XdyFyPD2De2CfzrAs7oVNKAFQjM+GediKQZX4g67X47Gx+XqT4NI9jyxWerOM4H9ycw6GeAmrFHIwWEcV5MF+IG75HjOkCtRtG8krZIOQGI5In0J12Pb0AigR6APQYYRcgORBdBHogyIPIAciLIGetAEYACyQEtzlj2Vz7+LkQss757zmjG9NqlEJFlHkl6xielQXY0UoWJILBFZxtTPsd+YGJyuE4jqyAZKtt6PItuh4Aa+F4xZHNObx6Yx5qCtMNn+vqQrERbHeOUogp+cihNwT2glKAsAvARgK9IIqQpDgJpQuCAoBekj0Q5AWSJ9klkDyFEYics8bApYXJIPksc56MufHhLQrRvK5JOdstLSf+YQxEiUYw4bJC355HyfaKmsgKSLaWvfOpVPZLufmC8iLHjrOd0GZi5zBWylmLe7dEaEQOahzUFGrCYlEY1dXk80a7YjXdQik4K/mg2g2gR4ECyG6B6TFAlwIFAD0C9EBYAJAn0COUbgjyBAugdEHYBUp+uTCbxKfVGF/Xb7rTf3SpXLK/QaS9T1ZAsrUuu5iFGA4w29EsWVAwJ1u4khaW9LRhpVmXHClbvOZ7OdTzeQAFGI0gLDYoPZIUjmIQ9jrBaSB6lNItwtOgOFMMNgKygcQZIjyDlNNElodfRTK4nsiGqfhv3faJn+VI2baLGzsyEDVbi4O34NEe2tmvkdTfRFrUleHhZXGx5556hFxP7tCLBws9US43oyZvhMWc0S4Yk/OBXbDokYDedKzJJ+NLerQNFCDsFsgpShYFUhBhN4EeUPJens7BuwKM5kUQWSuANci5w0fgbg7eYueMLbM4S0gB3+WcYSRxV9FmoNeZ7ZdTkxWQ9bb7L8AxWt50zfHhoQplGLqgWCzwPF3KUW3eg15AFEfp7h3N+KjbgMWcsTmARRA9PqBXgAIMCiBPgUi3kHkFekCcAkgXhUUDFNMC0OUl5BBHecT1QiHKFb0wimxwhORgjYERuEgO4xdmDtFOjsQv7GKYBtNPJEJIuL5ozDmKnguyLjx+bgKqyw6kikFdIaa9FLjZCIM2lGovAmS2LAIHzmKzxT/Z9j71Vs2/5EJxg/VdcMUe1ONnpX/ihVbzdtOVPVT7h5GTmxgrQOmBoItkAZC8CCNCcgLmRMQZm27hzYdcFnnMFjzQ8x7yOYBlk6+vCdv2cCjDYke7zQd+XlFJH/wWx7uHG6u1DvoWCUFfdFYvlr49Ty2ZtZwVkGydcAfyT2/NoVgrIszkUbA9De9OyRnt8pSNAmwEtAcwp4rBRlWcAuHpInIKFb2SsFi7CPYAUhSDooZwY25gz/jCmbtZUDiyOefPPu1Rd2ruxzAd0pDeI3fy2bPR9Li0+XDPOTY94mbkETyO1uSy9c54JamuaE2YCXfb7RPXpL98ZiNMto68WW67aQPyM7mDocbefM9G+NAVB54iDr2i5hSFngGYXgF6TUppF6CXwKke6AEOdUPQAxsVoCgYwwKcgbOScCbEzVI/TXPX1QUErkDAAL7BFyJGD7dU4CY7OXHWGa8T4VnhpTgwKRpL8iJSp3M5lp1r0Re90rY6gcIZQw33JwW3bE/EhDsrIK8E8HJ3fJ5S/qg713Vt8CEmkYsKzsAm/ARr518mwxZchPSzJlwE+phArM1dny1b+nmtPNU5ayH6mAxWn2vtOZFk4HqES1wx6oqnvRoRM487ka3lVeBaubudg74zOf8a62B27oRIX3Wf8eZnAflTm7cFl7fGN0LDz/jgp33wB2M/7+NQ7P2UD77mg58J6huqPia9J1VBSR5+EREjSCIe5n0ksQ/Jh0hCoyIEkREg1b+MtPCcaN7Egq0wgnYiNGEdKnC1FqiKOQrcrIBka8EaHoaSEBmsPmOv3/XLfkbfokEfcD0uJxCTRCYsKADJx7wCkBSM5OPERX2AML1hW53epDexiGzt2AzcDgn6tk5EVZ+JuvOPtpsCNysgbSrr52jJRaXxf3n+QLgetfC7sMKoYA1BvwqmeZZ1hQofaGlh2FTg3nbTBlIuQUyAkt0/KzXA5AyEeES23v4Sh2CkTQO7shugjYqIDFY9R8r2zJ/ec1D6xj+hnoMh1knXE7nEbWxlXM9nLQwb4aWI8s3Wpr1DAgBxYeYCsTgn+CzCYUWbECOgIOF/DJTa9jnNCshqsjyPpZDsqISmwXKuNL7LxqZPp+NPiUPDFa0lGQ5L25fxXxkZiOBb+Pr4D1vyDZJYSxjI5bboRMkM/1jJeyZWiGBxQ6esgLySxpMhw5GyPa5uRCqBI2UrN1RnbN/Eb6nHdo11t+uJrAiEXMaxRqCJhSEekGEoWmXApDcxlVenh7KZheFKWhjWtWEben/yJ5WsgLxioxp2X/c6kWGVHZXAIRiOlC2PEXyc7Ub2bolypfG7TMMMhGn/H2Bl2nU5lxKul+fmUkJg7ln8H5OONIIr4LMM3BUFUHNGCH4HZ296YlYTkxWQ9ZTfcvQC0Ow4vHef5N0DX2mMbe+XYajsqAQBSJbtsXwfAShbJ2OOlC0GqsH1j/+X0PDXa12/7rqcs1bkpLERikVMkHywJYA6lDhj8I4bzhbK+Wwwy8BdyTssEgjwgFxSaZBDpp3k+1kBWYYIhlkz5KXWmc8mrzV6O7rsTzrLXWFi+9f8eKnMvVsikUoQATlachw6+nWQHYdfnx/cs8/27bop1PQjNHzRdTubxj3oCQGoVsQ39GAjjh9tiuzmvejiJMIBjfhimzOnhaCaAagrC6Aq0wzcFHvKCsg6WS/ecu1p3HvTBmBo6U5koBoAwBodC8/VnxMRmkhusBFGwnTX3Zwo/Qr3XHuaDFa9DEM5UrY8hrFABqs+xVSM69/1+3HdX6cz+r9c0TlrjNHj7kbSHU/4ra7nz32mpQdqygmJyatQMAlmkq0VWmLQUAjCZLsqcLEUlZ1DMO18bNTqgVodq71EWFYv2Jv8odpbIxn+N8mY0lqfIAJyCEauv+NZX+3fi4J5i5/yDQDG5e2bkTOf1Vru38fj/X/ujP9/5frKd2Yd1iv7ZSnjGJFhbWIjsvWORwC83Y9vfx8MPx11uzP8lA+JUfoxdAlN0956eEh2pMDtwp+d3sRicGWnQ6ckFQIF27CDEtCIiJ8JLznYh9spA/eYC4gMQzFczXaYRZLorZjz7WnRe1jt/1MpVfYs6RI1UDIYrqqSt1kjb4XACMT5hirrgVFkXmu63W+FKXwo7O7/a6P6JyLD9x0+/i0boKKtTjySP5uMOQSDnUMQGf48q/23BfX/1XW5dyFW+JixCNxRGaMCkLKvFQN1NgN375bIT+EyxJqUkg6dQV3RGjhj5kn722UpgYIFn69/F/03/IAcl3Y/7XKHO48hI8PD2hjv2xJF5qfiemhA2vNGMRRCxKjqTFRofE6uvevlFfdKaKaBCbdAhMHgc9z79uvwbdQX/dkDSSGOcua2cMjHzXzbhHou8J6KQ7E6Yzaiy/5KOOT/bRjf/hU1/KzI+Neb3Q1ZtosWkmEohofB0ZKTUvUJAD/rx7e/Wwx+23XZV/vpEIvALj6uJqY1BO5v2TIPQTAMotHzOiCcx4bOF+N1UsJ9JBJqOqHQJ8TA4XBUxCKyX85J45I5r5MWfwfgqMbuS7lqEKCoiZmHSFVkWDk0ZNqVwn7Eb4ujJSeDVR9X+3/PbSp8FC/GqX1+e+4kiAT+hcZzzvnXyrY7aytpNjvrg/HNt+b904cectacj6KBfzn+z9Hg7k8mo8RkvKhfx0jZhFc9vdfm7eV+RnWhZ2bql6EiYm2XBWKFBlQJfs5u/NHfyyX7G81rhLGqLmZATMKgUk46hj03bFKNf9tE5hcRCB+rF5kf0E2C1kCCcspBLpLS+PcWFsNmhxWPbX+n65K/9TMhCMQCnVdAxAmC59Z8afyerKVe7hEm3S1FeCFeir2f9gFJCkc7Vr1gC84KcI9su7O24t0HhwQyTDxz6HwReW1QArXgJTKf4ETp72VrdS85ZNKAp/lrtGRlsOLDrv6vITKXox504QiQ+mUkx77TPoBiXNGUACnpi6c/4Mf7P2/Jv5Ht1QOHO5LNXPjzEnVsBWl2yA8AvJvj2/8hCH7H9UbnhUNeNfEEMc2ZWyIj0tBv4plXPdVSkp+ONMboVXAREuOQDo2HjPlULhc/yZGyxZnPStsClOUjr21bF5D0eFI5Wip46oWI6UAxy+UuvQJhO4CFI/BU+hs3K2u2ktoLWlxm8zby0z4gQFzR5sJ0+AxZuh6V/WxZyNKbVEVvNbF+XI6CHwjEQgBfCwECuJy9FDnzh2HK/3rY3f8F4/FnIpUnlgJcRRLSGi4ui/RX/u7grddNdAn/k82Z99pAeM9YBJGAisgYNvThRQHUdHQjcCV8hypwhYrIWvHhYdl25/PknZIxaZfzGLf5q3Th1RBuYifcKMm2/SSAlTdbSb+/D9iSmvZSRKyvhWB7o6vDLv2o7KiEsVYU8BRFd1H8DT8TfmCdmNQK6ChvL5Hr+7qqPxgHa+U1puA+GQz2hd39n+edfVtmGa6pdmbusXKTtMbRkut9yx3P2uvH3+cb4SeVfMz1uohpljYEoPL+RQFUGVbuvWkDiUvgtVMJZEyo+kyA4lbXKVsnUUAqiXmMB893OVvwge2ttCQk9aP47qr8vHS8I2Xr/F1YTKh5FYchjm2/aDDlaBxxnDtStnLtXS/DyC5EJjEMPfY6aUTE+pj0U7G3IqeYvH1viOWOMNH/t/F4301N7cwsMW1uIRmsehLCkbKNtk981cTmap3yf2iciMvbHBohiGVrAJWpAndm+g1i5ZzgSelA7hAJg0DIrLr1rKz7WNYCku48QnkDcgYiDGj39iMQBJ5eabJNOpYo91x7mhAXI3EhN80miIE0OdsdhH9ADhlMftUudgTsILecaFkWSYyFfCD9tPdUOFOw73SRvc1P9I/78e2/8MRoqSCDVZ8wZcu2yXAVAZvdiAxWX7T94x9S1R9X5UMIsHFD97fkHDQVuMG+2XY5YQcqcAnQGjGhFmKv5j4AwM5KVkBWgolKyoUdonA1oa50an44G4+4YivZhaHmQhvJmQu7MxGxftoH22VvCru+/l7ZOhmPjpbm82vGmryaMOan/ZQ1xp6oCK5ZSEQgftoHXw9qc6bP5s2XXhtx0o/3f+Tl0dIZIpVwmOGadEWz3choyUX9E7ebF2e2BeUHixsaB9AqAa6pwAWuaXdR11I1xEQGBL+TpzzRkmmbrZMsIGOpVR3wxna3qkuOHgUkpxHFzyc7yjBWGkANaq6QogVa7sJiNFaFld/m7uteNzBQDXP1LdK0Lezf/T2h7JW8wSLJBsd5GpVYGvqZEHzNB+Nks+12/63L6b6wu//T3FO6INHQDCuZKIHnGhfJ2+562fWPf0a2Tk4vpsAlIWJwWccqcJm6e0EekMHqzPHYKmTrWDhZgMjwsKa/2HOTGb/NgbLkNj4E4cE0jGnFd0YCVy22C4tANFbagjk1ePt7IuARcoAEuCOEtyGSZdWTpIXE+kYKuIpsMkX3G0H13nii/884UdoqgsOA62jJoZwUh8UeqMSLFcRdpbOpfBMbmpzVodP8WERBQJma85z5rGSP/XI+iunjcPBVT59G8FX0RFvqBOblhQoAOfTYixunVv4GrIRU5HZ5gn+03oXTUcbbonun39X3r5q7/EJDYgVu1+mgK0HGShmu1gfSH4q9hfS4gv03AXpnmOj/Cvf0vXXnTkgTJ2mqfFt+sxRYx4xudnm7ISi1E4OcSFo0FJGRvZ0gTuu8ArIzmfF7hWdBsEG13U9gEjseEU6/4SduiVcyvX12DBkrvRqU8xkfrTsTo14Jkd/hHdecjXJFZ7+HJJTk6FDPPnr9ZmIaszKz+FzANZ7ygQHWFOxPwth//o83bx/349vfza9s6VrSliDdqQOwBZFJa18H0tetMaGhB6frjf0trQqydZIF5OL9TZDwNS5nHUm2eWJXYjhLmRZJsIUV+1mpD4a34RJXML1H88EQwIRY1Xa5V8d1919FQOxMvocAHB0tOXnbLXVCvp48lCt7qiECMSJWJGG4+npQG8k2m5cv6Jnd93BX3zWzhDQsEsAtvAZkx2pvJRJQ+FjXjXc+lQGoK1FADu8056Q7DTvkJKaBVVLgishW5I7NB8OI2DAVh6jofjHe1ff2prcpAAw0H0rKrasNSs4CrvUQwkzwJjIXwmhOBJwX5D3XTvGf3poH5JIUFzMdGQ8ZGYDY1+TjZI/8Sh3jGp4N0zlHdeQq7CTNNDDyqiQ8+ti6HRKiSW/0BxwtbUR5czIqNFmplD1+JjznImOW32H96KXXWuP8If/0C7X6/a34H82xq55/+ccAnKexdiSFvdmdEpIBqCtdQIQ4p7M2l5XN9Z0NUtp70wYCV6EejnkXFhGjdXpXdOd5CZ9KhFFlM8tKHaw+J4I9yK8Faa8Z4SAPnXbz5EvNo915L0nHLhuZS23R5joVQG3GQ0J1XzvHQ66LAqLAGR3Re6Q0dgo3pGHzK2QNUzYkxE/PXOdy9hwfH6cPqMCFWgiSM7/aqPZvnx1lDu+Ct4JrMi8SBqDBPYvuyk1tEeUquM7MwCVB60TU67NTcI+gjeMhO7uANO3qRDakYJl0Ao0dKmfjjms3YlkoWS1WpXm6I+UT4W2IQFQp1ogxgs9w75YuALPgpDX6tVDzMwbi1gCGhkAmF31FypztfAWugUAePHWw+mJit5ApcJe/gByef0/thH1GBOJj0kRyRuzdGwCgUimbZZ+dyxXlN0qvAvlTYToQPH7ehklBS9vrLtGpwm/IjkrAmc8mZsy37XkMxP2mYLBaGhMSNCI21ELderl/Ps1+zug2DOWdV59iJCWQdWYGLmEFYtAR7uYdHIKVVGWSXSDam0R2eHcJpmjFiBkAgHJ5ecGxsbGSFQFDPbzb9UanQ+FPmBsjYnTKB0b2E42JbVtlsOrxUDmSYaiI3I5oFV3OJdGFAPwuNhWT0KLhhbtyqsCt598EI5u03ZXZS71bTxCczBS4K4yBpGi165jzfsIgVjDwF8iyxc7lM4EmIQNjVeW9pY2EfEhnAnkSgK0AooGwRvIm2D/i3i0Rdn+bABDIf+GM4kS6mxPWhUQGSjwgb7ylzpGyPcIGcjYDF1faLidEuyuzWytwTeLX0rDS/vGQ6wBELZvD9obSCfoG42eCum57Waj+8F0yDOVCBeyJrsktToah/qXw667LblKv4WR3YBGxvh6C7XHXhINdH5H3J0lz0Wl2UhvhOy4nK8ZKPZKEB2CpY82mAle4pYPv67TTwpOIo+90sJK4U9S4z0rHzbkiUE/C8j/ztps2YKAaeJLErL2pOXJj7LqrTM58LNSCLl93kJoP5fFb3F16E3ZUVC6pHqJgFLmVZ6XOsn1qAZHwDgCtdSFNBS7w5s7NwE0BVOGDTQWuICsgK8sDkc7iKwtgtBHUFuz5Pj/zJwmWM9Saln2MwVFbt07GvO2q08W6L4qRHJVYrvl/jvlQT/D6R+CQpJmztyKsfOuXRFgaE2J9BsHe14pANpRm4GL3tnOo8ibEHZyBawA04yEzAtkKF5CBaiAQn3iuxZqNMtZP++C63c+F8f7PigyryLBytOTkOCIbuHdLJDsq4cA/bOsN+cKXXdFeGOohyDLn4oiI9VM+2G57Yxj72vtlGNqIwx2hFl4+GZOhYz7WzBmIkX0yWH2RQzjiWHNnMwOXZrPLm94Q2JkZuIThjILAZKbAXYUCknhqSqMTN5v0ofSmaH8l7O7/R1b7z5HBqicA7t0ScaRsh4ZgEuPh9GMoMddJCw1l62TMse1vOO1M9y+2aAfCtPciKwVsigkzQZEzn66N972+eMMd34VwrxRM8pCv8LEmIGNopuahtfYnDtiCnIDoUAtDa0yo6wuuYO7PFLgru1wzioCKGqQzwSaBOD/lgyu6dwSGK/1E/7AtTP9V4rSVbELDwwvvs0ryf/betCFMz/yfavgbJrKn+2kfFgYwLTePhYHqeuypOMTfF8FPNnbhVmvlhpVs/wRitRZUlaPzkvZwJIBqrGxNId1O7D4okQhUH8fV1R8mhlmZAnflGts0C8RX+/7R9rh3+EM+rNzuu+L3jnfOOOQMQi08IsDfKjjmrH8Y9fxL2FSM8cRTDl29pwP2QiXfAiPvNEVzHmqK2KsaszpgMsngeiPrX4p/xsHu04jfZkgooisRKO1y1vhGeMxNPXOpvO3x+sIkv9n0vX96a973HHrQ5ewFvqHaaS7sBL3riZw/6P+fqDT+vmbiYvaor7Ccn5DnYKSjj7sE4nxMhmkfrDNvMl3uk86Z27yP9gejD4Vnph7yxVMe9moehJN/Md3u48bKeX7KBx/I1Soes157daVE5rPINabV6722sEImQwJFTgDwNnnb4/Xm6IaFGbgA6sWXzhPK6zpVgQumVH3h3dnjvZpyfvKpddFSpTGRPlb1U7H3MdUZOcXmzGttzpzvInuus9LrGyH9e9XEK2N1H5bZU6Qee44P7jcg8lXkjy8z5riId56AyP9clJWZAqjO2Uttl42UDJ2owBURE2qBVk2mwF3dY1x5cj2dlAtgBOIEMD6QPlb1DVUfqybRDDL792sJAIeDXo3B+w1wqh4MteXugkjQ5YzxtfA9F+xE8qcVXdQ8ibgKTjrrOG6uAjcSYdAfgvIYMgXu6qlxSfk2Z8Lq0apXuStJCkr6Ie2zs1IhIlJQ4OdV6WW5nc+FAQULGPwvGaweaun/kR7lp1VjyzpQ4D602FF1tpa7gKRHXM6GbwWvh4yBMGPtrWpxC540Bmcag15VLjsmoDNBnfBvjpK+R9751lMIXDQ3fa/zEBABm/hHq6PqbC1zzW7ePKMlF2y43+bsRZ2Ivmerte2jy4nxdd7veqa3Ysukb7UjJ14Zw9qo9l9tLe7QAOlEApmSGnU5g5ov45lz/h6bYbEfYd1d2PJmJi53a7/cYZu9io+r/ffBmYukEbQjTXSzdWQJyTlIw/8P2ToZJ4LDFkeaiQJXAVxpupwJB+OwErk1K0/VFxNqoWYpu9O8m5DdAytcQADMdR+/AwY/z44cgLN1hHmQNcZPxVPO8EutzIMWEshEkvS9TsUNxAgY+DyAixqj158PoURW1s04HnsAxhgI61H/xN3tYDXp5rISLTmh0147bffJ1iKmS13O6cv6DzKw+7tNwmDrF1eUI2Ub8PTlswpc6UgsCRC+CtZ8LVqHt3BkABQswlR8D4CtTfhh7QtImpoGNfsV+rgrmDf6eoaDdHYLAhNqQWn5R0d3nwc5+uw5VHkDO1mBm1L2ved6PQTwDrQE7mjili1HUqy2mA7JP0YGqzMAbl2N1LRsrSidO7guZxDrWK5/950cgjlaBq43utkVTG/wqh1qYTj/2H4dfkAoAIwGTKLtmKgpH8QZ/TvOBAgzELVzp5eEzk1rfgfALMsUS6XvAVuQX0V/1mydkFQjTAfN5dqHZXu4SOxI2YkHe+8IsT5q88YQ2c3Uid2HLVrjp/0e9/TZ/0IOLd59zPfKuAqBnWGq/Yq8rlAbGVD5NBrtw7I1c6jfyRjztlvqYuRLq2izl63lpfAnNEBnPp0Ujv2ylJnSbAau8BI0FNnxfRufq0UCETwog9VD7ZJzYxYGCpGQGPxSOOQPCmQNsluzdVLdR5ezYSaMudt23ZLcZEt0H6kCt9F78AIC52liJ5CtNs65IdJEwTbJuZn3j5BhKMZKttg/8W2Cf2e7rMm6kM7qPjQO3kI+KcNQVPYvXQ6aGbiUS12Xc52qwH2FlA9BrECTpt8mNo1msUR6DfrfQz14I5JpY9ARNO5geyKrDf2ilMb3cLTklsQ+5mTgEtiS2B1m17m9c2605oRtZdNojjwCG1aOlG1+cM8+elRM0RqQGSW47VmngjDtn3dFM0RCFmWdtlLgUrZ2rAL3FXKJTc4AwBOzOTfDaNMOBADKFRIQR/lUqOu0sVkX0t68BwZbtFZjHZKrx7+HsZI9mg/oLIFs700bRHhhBytwXyEAqgGED8hg1bdTzo1ZLLMJI2UjA7septffN93OQjMspD1vLQbb5Zyf8ruigZs+y5GyxWD1GDrGNAN3euZNxsjZPu7YDNxXCgICUXN3u+XcLL7jlBN9xItOf9sf9I/YvLXKrIi02+gCIwj1cMhF5pdFhhXlzTym3amZgUu53OStgWRjavteaLFoKCi8F0Bb5dyYJejAxJnPypl9ew7SyPtIBmOE2bFuW91ZwXU5qw38B7lu18P8ky3RMftEHM7AvTZTPLW5TYET8fXwYh14uFWiYHt2IACa81aub9d4qIfftF3OQpoJdtla4xsrdt3Ohan4b3OD43/E0ZKT908e+7WRpMMUyOUI6NAM3FfIlU4CwR7t3j7+w3ZQ4B5zAQEA7KgoWba5wd3/xU/Ff+N6XI7Misga4x7q8ibytfCtqXr9/cmpy7HrItjMwH3ts+cAvIAJAzXDP9CW5B5NxK24RyThaaEtYx0WJycRqCiHYFyw/zZM+2+4bhuRzMJ61urI1hkoWXPB/6sNN9/9I2BIZPg4LO5ScZ2PeanN2Z6gna/AXcfXWxKr1/bMuTHHKI8mdgIyWD1Un4nfpfXwmCs6x4wfsurFQyyCcWJ8zb9XBu64m6Mld9z+mLMRDnpFonnKRJPtuoyICdNBA+U+AG2Xc2OOw2NBOVK23Tfd+QMT+Hb1+n1XsDYrIqvqc+Ftl3PxtP+t/A17vnTCsY3Nm5ByFTQjkLV7zg3IH+RsaMucm+MCzmRHJXCkbGX7xDdNLbw1eP7AFZ0lsnFmNTJfba+L9KD/w9zg7k9x75boRIpHAsINK0dLBYKXoMMdyNa5sUsT/3hY+vYcbMecm+NG3mVHJZBlKzfufsjX9MdDrE+k40wGrK5c9YiTwOj4C7Y0/iGOlC22TPqTUfw3nD9fRF4XYs08tNtcgStIHcjaMOfGnFgrnXQihZsm9scv12/QWPe5HhdlpzMrUzzsKS7SQ/4vXP/EezhStniowhPfiWYVuJelGbiaKXDb+AzGE0qZXDTTuBMLyNxxpvgT33jSPDd1s9bCLa7HRQR9RjZbnvmXYLC9LvIH4z81Xxt/Dyplg3JFj6ZzwbEocClXwQqy6Ee0M4Bqfc3XA+X+1MB2/RSQw+PMkJF3TD5370PT79Ba+Izrck4MJANXT47nIQZ0Xc76g/73ou0T78XOZiLZST7wqQIXwi2ZAre9LQyNMxDKt/I9U0+m/cj6KiCz8v8hmC3vm/S2b9cHQy38shiZdgWbgas4MV8PFxkjzkiYCh+NSuMfT+z7cdJxhrMK3PG+U0G8KVPgtvcugkhA4H7ZOhm3kwJ3WQvIrJMZAI6Uresf/5PQCDeGWB90PZEjqGTGMzhWenpUsFYFBzQO73Cl8f/OkbLFQDUsy6iRRjjEKhdZZ87KFLhtfWRPmDkAahspcJe9gDTfsOyoBO7dEuUGd99pX65fr7Xwx65gjcsZQ9JnniKLjywk1PW6SGPuMTPx9mj7xFebrmLLhlOkN6ERXi5Fi0yB2873RKrAZZhsNwXuihSQ2UKydTImh4y87a6X7fW7fsXPhJ9R1cddj3MCCJHdtAv5HS5vjXFidMr/NxPLjTJ4xyNk2Z4QSexYFLiUrWBWy9tdgRvq4SWXD/sBtJUC9whOwIpx+CtlIzsqgbdce5r2uGFCftXmrPE1HwARkVeuApSgB8W4XmfCjH+EQT8W9e/+50T7AFmJ4OREdFeywerdNm8u9zNBRTIMpC2TBYvOhpq/2/ZPXNPOgedmJWe4WebqW+983vZN/Joqt4dGGHPdzrq8MQT9Ky28KhlXGFzRObHwOu1/105NXxv17/5n7t0SQVJHuBUoHiIgcmYTiTcyY6C2f4SDyL0iYLspcFelgMw/6oVwpGxz2yd2277xG9DQX9LA/a7LORcZQzKs90JCUpVUV3TGFazVerjFBvTbvvFPyM2TL3GkbGXrZLxiSHszA1cbm13RdIWQKXDR3sdxEMVd7f7PNKuFKDc5IxiCyLZdf/HMj6auCnX9cFB+2/VG9nAhWT8YCQmSDCTVFayJup1Rr3ci1p+2feM/IaXxu8iyJZOEuBX9x6QAKtVsSQx6s5OxdrYwDNNBLXBvOypw5y63ukdTw7PHvfKOyjSAP3j+ti1fOFWK71Y1v+y63WYQ8NOBEAZQbCfukiQVAjVGnOlyFjGhMXezwT+wfbu+LAJNsI4hERlenYI5MKBAFUa4FSEjkLU1gBqJhJhP/Wiq/jjaUIG7KiDqsRmllGejFzlaKgTHd4rwvQAGTNECNYVXDWlVNu1cTJIRjAqKdTkR5C3CVKiJ4T8b4PNy/fitC8Hl1fxdi4BPjJYKrzHhAZezF/hYVZDZGLYlgNrlbJgKX3Ol8ZvazcJwTTuQI4gySPCRtJDMAPgrAH/Fie3X+Sn93wX6U67oXgMDYEbhgybunRQDgaylCIyAgiQEBMW6vDHIGYOZgOD1AQT9sjV2RK7f9cjs14yUbVIwV694YDbCYZg/5vz5Xs3rQqzMikfbK3D3AkACoFZ9VkCOpZA0xWKy6w4Ad3C87z+i4W9UyruoGHR5ezacAJ7QhkITvQ0TQ2CRlehQSCRFIiFOEISIiHWRMcgJAEGY9iF4fUi83hYEX4lOff5OuWR/I/n6IYPKfpEdlbCaXcf8lWTkBsplrmiieCYEA7HZs9qWI4yBJ1S4t50JZG1TQBYWktmHbmzMSH/1BQBfBvBljpbO8PXQZxp4C0T6lbzQdTkHI4BXICZCIFIQlrNxPDIby3Nkv8L0f2T29XMFSwKKMQZirAgiC1gBSOh0QPDhe+Ll3kBWIydj+P74fbIDswWCoyWHsaqerH5lWdbhDNyr4YwKNDDDQNpyDjYiCLXQCCE8CKBtMnDbDgM5HjJa8zh43sNZ4BtCg1cLcA0FlwK8QEReZQoWcOnb0uSbzH5mi3cvKR1CAJg5RUYBNBQh1jqAZwA8QfARoUxaG/YBeFT69hyc++1GR0vuwIGzuGNHRdspqLo5R/tdfd+wG3JX45BHGqadLbTX0S3yBv5Q+JabevpiedvjdbS9YUlHuVOXDcaelVYUb+659jQw9zqvOE+A8wR8LRWvhvA0AL0kesVIDmT6nkVJeBFOAZiCyBQVLwA4IMAzEH6fwu8FylP5YJ+SweqhI37mSNnizGcFAwMKGWY7qiVnFbijpY3BhNtg5EwqggizCtJ+K9iczfu6fjUqjf8qOWTaooNdDwWk5ayYumsBFT0aUp1K4h3y9eRrztio+EEtHKvehISMjZXsAJAeiQ6zk8x4yLLF5LfzaESZCKad13OxoLensew6qKyAHEuHMiTAfmnO/DhwFvFQhceSVH/E1875euwEM+eubGXryPX/A7YAHEF8XQd8AAAAAElFTkSuQmCC" alt="JE Technology Solutions"><div style="min-width:0"><h1>Stand Assessment</h1><small>29 CFR 1910 Subpart D · Fall protection gap assessment</small></div></div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="t-info" aria-selected="true" data-view="info">Assessment<span class="ti" id="ti-info"></span></button>
+      <button class="tab" role="tab" id="t-stands" aria-selected="false" data-view="stands">Stands<span class="ti" id="ti-stands"></span></button>
+      <button class="tab" role="tab" id="t-report" aria-selected="false" data-view="report">Report<span class="ti">PDF</span></button>
+    </nav>
+    <button class="chip-sync" id="sync" type="button" aria-live="polite"><i></i><b id="sync-t">Loading…</b></button>
+    <button class="iconbtn" id="b-menu" type="button" aria-label="More options">⋯</button>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div id="banners" class="stack" style="margin-bottom:16px"></div>
+  <section class="view" id="v-info"></section>
+  <section class="view" id="v-stands" hidden></section>
+  <section class="view" id="v-report" hidden></section>
+</main>
+
+<input type="file" id="f-cam" accept="image/*" capture="environment" hidden>
+<input type="file" id="f-lib" accept="image/*" multiple hidden>
+<input type="file" id="f-import" accept=".json,application/json" hidden>
+<div id="modal-root"></div>
+<div id="pdf-host" aria-hidden="true"></div>
+
+<script>
+const KIT = {"version": "1.2", "updated": "2026-11-05", "groups": [{"key": "A", "name": "General surface condition", "std": "29 CFR 1910.22"}, {"key": "B", "name": "Ladder general requirements", "std": "29 CFR 1910.23(b)"}, {"key": "C", "name": "Mobile ladder stands and platforms", "std": "29 CFR 1910.23(e)"}, {"key": "D", "name": "Duty to have fall protection", "std": "29 CFR 1910.28"}, {"key": "E", "name": "Guardrails and toeboards", "std": "29 CFR 1910.29(b), (k)"}, {"key": "F", "name": "Stairs, handrails and stair rails", "std": "29 CFR 1910.25, 1910.29(f)"}, {"key": "G", "name": "Fixed ladders", "std": "29 CFR 1910.23(d), 1910.28(b)(9)"}, {"key": "H", "name": "Training and safe use", "std": "29 CFR 1910.30, 1910.23(b)"}, {"key": "I", "name": "Condition observations", "std": "Good practice / ANSI A14.7"}, {"key": "J", "name": "Fit at the equipment (in position)", "std": "29 CFR 1910.28(b)(1), 1910.22(c)"}], "tags": {"all": "All units", "mobile": "Mobile stands and mobile platforms", "mobile_ge4": "Mobile units, top step 4 ft or higher", "MS": "Mobile ladder stands", "MS_gt10": "Mobile ladder stands, top step above 10 ft", "MS_gt10_deep": "Mobile ladder stands above 10 ft with a top step 20 in or deeper", "MP": "Mobile ladder stand platforms", "MP_4to10": "Mobile platforms, platform 4 to 10 ft", "MP_gt10": "Mobile platforms, platform above 10 ft", "FP_ge4": "Fixed platforms 4 ft or higher", "FP_stairs": "Fixed platforms reached by standard stairs", "FP_ship": "Fixed platforms reached by ship stairs", "FP_ladder": "Fixed platforms reached by a fixed ladder", "FP_ladder_gt24": "Fixed ladders extending more than 24 ft", "ladder": "Any unit climbed by steps or rungs", "guardrail": "Units where guardrail systems are required", "toeboard": "Units where toeboards are required", "inpos": "Units assessed in position at the equipment they serve"}, "measures": [{"key": "H", "label": "Top step / platform height", "unit": "ft", "tags": ["all"], "hint": "Floor to standing surface of the highest step or platform"}, {"key": "baseMin", "label": "Shortest base dimension", "unit": "in", "tags": ["mobile"], "hint": "Outside of caster/foot to outside, narrowest direction"}, {"key": "stepWidth", "label": "Narrowest step width", "unit": "in", "tags": ["mobile"]}, {"key": "riseMax", "label": "Largest step rise", "unit": "in", "tags": ["mobile"]}, {"key": "riseMin", "label": "Smallest step rise", "unit": "in", "tags": ["mobile"]}, {"key": "depthMin", "label": "Shallowest step depth", "unit": "in", "tags": ["mobile"]}, {"key": "stringerAngle", "label": "Step stringer slope", "unit": "deg", "tags": ["mobile"], "hint": "Measured from horizontal"}, {"key": "stepRail", "label": "Step handrail height", "unit": "in", "tags": ["mobile_ge4"], "hint": "Vertical, from front edge of step"}, {"key": "topDepth", "label": "Top step depth, front to back", "unit": "in", "tags": ["MS_gt10"]}, {"key": "topRail", "label": "Top step handrail height", "unit": "in", "tags": ["MS_gt10"]}, {"key": "platRail", "label": "Platform top rail height", "unit": "in", "tags": ["MP", "FP_ge4"], "hint": "Deck surface to top of top rail"}, {"key": "midRail", "label": "Midrail height", "unit": "in", "tags": ["MP", "FP_ge4"]}, {"key": "maxOpening", "label": "Largest rail opening", "unit": "in", "tags": ["guardrail"], "hint": "Largest clear gap between rail members"}, {"key": "toeH", "label": "Toeboard height", "unit": "in", "tags": ["toeboard"]}, {"key": "toeGap", "label": "Gap under toeboard", "unit": "in", "tags": ["toeboard"]}, {"key": "mil", "label": "Maximum intended load", "unit": "lb", "tags": ["mobile"], "hint": "People + tools + parts, as stated by the customer"}, {"key": "unitWt", "label": "Unit weight (est.)", "unit": "lb", "tags": ["mobile"]}, {"key": "casters", "label": "Number of casters", "unit": "ea", "tags": ["mobile"]}, {"key": "casterRating", "label": "Rated load per caster", "unit": "lb", "tags": ["mobile"], "hint": "From caster marking or catalog; leave blank if unknown"}, {"key": "stairAngle", "label": "Stair angle", "unit": "deg", "tags": ["FP_stairs", "FP_ship"]}, {"key": "stairRise", "label": "Largest stair riser", "unit": "in", "tags": ["FP_stairs", "FP_ship"]}, {"key": "stairTread", "label": "Smallest tread depth", "unit": "in", "tags": ["FP_stairs", "FP_ship"]}, {"key": "stairWidth", "label": "Stair width between barriers", "unit": "in", "tags": ["FP_stairs", "FP_ship"]}, {"key": "handrailH", "label": "Stair handrail height", "unit": "in", "tags": ["FP_stairs"], "hint": "From leading edge of tread"}, {"key": "stairRailH", "label": "Stair rail system height", "unit": "in", "tags": ["FP_stairs"]}, {"key": "landingDepth", "label": "Landing depth", "unit": "in", "tags": ["FP_stairs"]}, {"key": "rungSpacing", "label": "Rung spacing (max)", "unit": "in", "tags": ["FP_ladder"], "hint": "Centerline to centerline"}, {"key": "rungWidth", "label": "Rung clear width", "unit": "in", "tags": ["FP_ladder"]}, {"key": "rungBehind", "label": "Clearance behind rungs", "unit": "in", "tags": ["FP_ladder"]}, {"key": "railExt", "label": "Side rail extension above landing", "unit": "in", "tags": ["FP_ladder"]}, {"key": "workGap", "label": "Largest work-side gap", "unit": "in", "tags": ["inpos"], "hint": "Deck edge to the equipment surface, at the widest point in each working position"}], "items": [{"id": "A1", "g": "A", "cite": "1910.22(a)(3)", "tags": ["all"], "sev": "yellow", "req": "Walking-working surfaces are free of hazards such as sharp or protruding objects, loose boards or plates, corrosion, leaks and spills.", "check": "Walk the deck and steps. Run a gloved hand along deck edges and rails. Note loose deck plate, trip edges and corrosion."}, {"id": "A2", "g": "A", "cite": "1910.22(b)", "tags": ["all"], "sev": "red", "req": "Each walking-working surface can support the maximum intended load for that surface.", "check": "Ask for a rated capacity, drawings or calculations. With no design data, rate Unable to verify and recommend a PE review or proof-load test."}, {"id": "A3", "g": "A", "cite": "1910.22(c)", "tags": ["all"], "sev": "yellow", "req": "A safe means of access and egress to and from the surface is provided and used.", "check": "Confirm workers reach the deck by the unit's own steps, stairs or ladder, not by climbing rails, frames or the aircraft or part."}, {"id": "A4", "g": "A", "cite": "1910.22(d)(1)", "tags": ["all"], "sev": "yellow", "req": "Surfaces are inspected regularly and as necessary, and kept in a safe condition.", "check": "Ask for inspection records, checklists or tags. Note the interval and who performs it."}, {"id": "A5", "g": "A", "cite": "1910.22(d)(2)", "tags": ["all"], "sev": "red", "req": "Hazardous conditions are corrected or repaired before the surface is used again, or guarded to prevent use until repaired.", "check": "Look for known defects on units still in service. Ask whether damaged units are pulled from use."}, {"id": "A6", "g": "A", "cite": "1910.22(d)(3)", "tags": ["all"], "sev": "yellow", "req": "Any correction or repair involving structural integrity is performed or supervised by a qualified person.", "check": "Identify field repairs, added welds, splices or bolted patches. Ask who performed them and whether it was documented."}, {"id": "B1", "g": "B", "cite": "1910.23(b)(1)", "tags": ["ladder"], "sev": "yellow", "auto": "uniformRise", "req": "Steps, rungs and cleats are parallel, level and uniformly spaced when the unit is in position for use.", "check": "Measure every rise. The app shows the spread between the largest and smallest rise; judge uniformity from it."}, {"id": "B2", "g": "B", "cite": "1910.23(b)(6)", "tags": ["ladder"], "sev": "yellow", "req": "Metal ladders are made of corrosion-resistant material or protected against corrosion.", "check": "Note bare steel, flaking coating, rust scale and pitting, especially at welds and the base."}, {"id": "B3", "g": "B", "cite": "1910.23(b)(7)", "tags": ["ladder"], "sev": "yellow", "req": "Ladder surfaces are free of puncture and laceration hazards.", "check": "Check for burrs, sharp sheared edges, exposed bolt threads and weld spatter on grip and step surfaces."}, {"id": "B4", "g": "B", "cite": "1910.23(b)(8)", "tags": ["ladder"], "sev": "yellow", "req": "Ladders are used only for the purposes for which they were designed.", "check": "Interview users and watch the work. Note standing on rails, bridging to other structures or hanging loads."}, {"id": "B5", "g": "B", "cite": "1910.23(b)(9)", "tags": ["ladder"], "sev": "yellow", "req": "Ladders are inspected before initial use in each work shift, and more often as necessary.", "check": "Ask whether a pre-use check is done each shift and what it covers."}, {"id": "B6", "g": "B", "cite": "1910.23(b)(10)", "tags": ["ladder"], "sev": "red", "req": "Any unit with structural or other defects is immediately tagged \"Dangerous: Do Not Use\" and removed from service until repaired per 1910.22(d), or replaced.", "check": "Confirm a tag-out practice exists. If you find a structural defect, tell the site contact before you leave."}, {"id": "C1", "g": "C", "cite": "1910.23(e)(1)(i)", "tags": ["mobile"], "sev": "yellow", "auto": "stepWidth", "req": "Mobile ladder stands and platforms have a step width of at least 16 inches.", "check": "Measure the clear width of the narrowest step."}, {"id": "C2", "g": "C", "cite": "1910.23(e)(1)(ii)", "tags": ["mobile"], "sev": "yellow", "req": "Steps and platforms are slip resistant, by design or by a secondary process such as dimpling, knurling, coating or durable slip-resistant tape.", "check": "Check every step and the deck. Worn-smooth diamond plate or missing tape counts against this item."}, {"id": "C3", "g": "C", "cite": "1910.23(e)(1)(iii)", "tags": ["mobile"], "sev": "red", "req": "Mobile ladder stands and platforms can support at least four times their maximum intended load.", "check": "Needs design calculations or a proof-load test. Without them, rate Unable to verify."}, {"id": "C4", "g": "C", "cite": "1910.23(e)(1)(iv)", "tags": ["mobile"], "sev": "red", "auto": "casters", "req": "Wheels or casters under load can support their proportional share of four times the maximum intended load, plus their share of the unit's weight.", "check": "Record caster count and rated load. The app computes the required rating per caster: (4 x MIL + unit weight) / number of casters."}, {"id": "C5", "g": "C", "cite": "1910.23(e)(1)(v)", "tags": ["mobile_ge4"], "sev": "red", "auto": "stepRail", "req": "Units with a top step 4 ft or higher have handrails 29.5 to 37 inches high, measured vertically from the front edge of a step. Chains or removable gates may substitute only in special-use applications.", "check": "Measure handrail height at the nosing of several steps."}, {"id": "C6", "g": "C", "cite": "1910.23(e)(1)(vi)", "tags": ["mobile"], "sev": "red", "auto": "baseRatio", "req": "Maximum work-surface height does not exceed four times the shortest base dimension without additional support. Greater heights need outriggers, counterweights or comparable stabilizing means.", "check": "Measure the narrowest base dimension. The app compares it to the work-surface height. If outriggers or counterweights are fitted and in use, rate C and note them."}, {"id": "C7", "g": "C", "cite": "1910.23(e)(1)(vii)", "tags": ["mobile"], "sev": "red", "req": "Units with wheels or casters have a system to impede horizontal movement when an employee is on the unit.", "check": "Confirm caster brakes or floor locks are present on every caster or by a step-to-lock system, and that each one engages."}, {"id": "C8", "g": "C", "cite": "1910.23(e)(1)(viii)", "tags": ["mobile"], "sev": "red", "req": "No mobile ladder stand or platform moves when an employee is on it.", "check": "With locks engaged, push firmly at deck height from the floor. Any roll or walk is a finding. Ask whether units are ever moved occupied."}, {"id": "C9", "g": "C", "cite": "1910.23(e)(2)(i)", "tags": ["MS"], "sev": "yellow", "auto": "steps", "req": "Steps are uniformly spaced with a rise of no more than 10 inches and a depth of at least 7 inches. Step stringer slope is no more than 60 degrees from horizontal.", "check": "Measure largest rise, shallowest depth and stringer angle."}, {"id": "C10", "g": "C", "cite": "1910.23(e)(2)(ii)", "tags": ["MS_gt10"], "sev": "red", "auto": "topRail", "req": "Stands with a top step above 10 ft have the top step protected on three sides by a handrail at least 36 inches high. Removable gates or chains may substitute only in special-use applications.", "check": "Confirm rails on three sides of the top step and measure their height."}, {"id": "C11", "g": "C", "cite": "1910.23(e)(2)(ii)", "tags": ["MS_gt10_deep"], "sev": "yellow", "req": "Top steps 20 inches or more front to back also have a midrail and toeboard.", "check": "Confirm a midrail and toeboard around the top step."}, {"id": "C12", "g": "C", "cite": "1910.23(e)(2)(iii)", "tags": ["MS"], "sev": "red", "req": "The standing area of a mobile ladder stand is within the base frame.", "check": "Sight down from the top step. A top step that cantilevers past the casters is a finding."}, {"id": "C13", "g": "C", "cite": "1910.23(e)(3)(i)", "tags": ["MP"], "sev": "yellow", "auto": "steps", "req": "Steps of mobile ladder stand platforms meet 1910.23(e)(2)(i): rise no more than 10 inches, depth at least 7 inches, stringer no more than 60 degrees. Steeper slopes or vertical rungs are allowed only where the employer shows this is not feasible and the unit is stabilized against overturning.", "check": "Measure largest rise, shallowest depth and stringer angle. If steeper, ask why and check for stabilizers."}, {"id": "C14", "g": "C", "cite": "1910.23(e)(3)(ii)", "tags": ["MP_4to10"], "sev": "red", "auto": "platRail36", "req": "Platforms 4 to 10 ft high have handrails at least 36 inches high and midrails in the platform area.", "check": "Measure top rail and midrail on every exposed side and end of the platform."}, {"id": "C15", "g": "C", "cite": "1910.23(e)(3)(iii)", "tags": ["MP_gt10"], "sev": "red", "req": "Platforms above 10 ft have guardrails and toeboards on the exposed sides and ends. Guardrails must meet 1910.29(b) and toeboards 1910.29(k).", "check": "Confirm guardrails and toeboards on every exposed side and end, then complete section E."}, {"id": "C16", "g": "C", "cite": "1910.23(e)(3)(iv)", "tags": ["mobile"], "sev": "yellow", "req": "Chains or removable gates in place of handrails or guardrails are used only in special-use applications.", "check": "Mark N/A if no chains or gates are used. If used, record why and whether they are kept closed during work."}, {"id": "D1", "g": "D", "cite": "1910.28(b)(1)(i)", "tags": ["FP_ge4"], "sev": "red", "req": "Each unprotected side or edge 4 ft or more above a lower level is protected by a guardrail system, safety net system or personal fall protection system.", "check": "Walk the full perimeter. Record each open side, including the side facing the work."}, {"id": "D2", "g": "D", "cite": "1910.28(b)(3)(iv)", "tags": ["FP_ladder"], "sev": "red", "req": "A ladderway platform hole has a guardrail and toeboards on all exposed sides, with a self-closing gate or an offset at the entrance.", "check": "Check the ladder arrival point. An open gap with no gate or offset is a finding."}, {"id": "D3", "g": "D", "cite": "1910.28(b)(11)(i)", "tags": ["FP_stairs", "FP_ship"], "sev": "red", "req": "Each unprotected side or edge of a stair landing 4 ft or more above a lower level has a guardrail or stair rail system.", "check": "Check intermediate and top landings."}, {"id": "D4", "g": "D", "cite": "1910.28(b)(11)(ii)", "tags": ["FP_stairs"], "sev": "red", "req": "Each flight with at least 3 treads and at least 4 risers has stair rail systems and handrails as the standard's table requires for the stair width and enclosure.", "check": "Record which sides are open or enclosed and which rails are present."}, {"id": "D5", "g": "D", "cite": "1910.28(c)", "tags": ["guardrail"], "sev": "yellow", "req": "Where employees are exposed to falling objects, the employer uses toeboards, screens or guardrails, canopies, or barricades below, and requires head protection.", "check": "Ask whether people work beneath or beside the platform. Note tools or parts staged near open edges."}, {"id": "E1", "g": "E", "cite": "1910.29(b)(1)", "tags": ["guardrail"], "sev": "red", "auto": "guardRail", "req": "Top rail height is 42 inches, plus or minus 3 inches, above the walking-working surface. Heights above 45 inches are allowed if all other guardrail criteria are met.", "check": "Measure at several points, from the deck surface to the top of the top rail."}, {"id": "E2", "g": "E", "cite": "1910.29(b)(2)", "tags": ["guardrail"], "sev": "red", "auto": "opening", "req": "Midrails are installed midway between top rail and deck, or intermediate members leave no opening wider than 19 inches.", "check": "Measure midrail height and the largest clear opening in the rail system."}, {"id": "E3", "g": "E", "cite": "1910.29(b)(3)", "tags": ["guardrail"], "sev": "red", "req": "The guardrail withstands, without failure, at least 200 lb applied downward or outward within 2 inches of the top edge at any point.", "check": "Not verifiable visually. Rate Unable to verify unless a calibrated test was performed. Note any rail that moves under hand pressure."}, {"id": "E4", "g": "E", "cite": "1910.29(b)(4)", "tags": ["guardrail"], "sev": "yellow", "req": "Under a 200 lb downward test load, the top rail does not deflect below 39 inches above the deck.", "check": "Rate with E3."}, {"id": "E5", "g": "E", "cite": "1910.29(b)(5)", "tags": ["guardrail"], "sev": "yellow", "req": "Midrails and other intermediate members withstand at least 150 lb applied downward or outward at any point.", "check": "Rate with E3. Note loose or single-fastener midrails."}, {"id": "E6", "g": "E", "cite": "1910.29(b)(6), (b)(7)", "tags": ["guardrail"], "sev": "yellow", "req": "Guardrails are smooth-surfaced, and rail ends do not overhang terminal posts where the overhang is a projection hazard.", "check": "Check for sharp edges, snag points and open tube ends at walking height."}, {"id": "E7", "g": "E", "cite": "1910.29(b)(8), (b)(9)", "tags": ["guardrail"], "sev": "yellow", "req": "Top rails and midrails are at least 0.25 inch thick or in diameter, and are not steel or plastic banding.", "check": "Check rail material and size."}, {"id": "E8", "g": "E", "cite": "1910.29(k)(1)(ii)-(iv)", "tags": ["toeboard"], "sev": "yellow", "auto": "toe", "req": "Toeboards are at least 3.5 inches tall, have no more than a 0.25-inch gap above the deck, and have no opening larger than 1 inch.", "check": "Measure toeboard height and the gap at the deck."}, {"id": "E9", "g": "E", "cite": "1910.29(k)(1)(vi)", "tags": ["toeboard"], "sev": "yellow", "req": "Toeboards withstand at least 50 lb applied downward or outward at any point.", "check": "Note loose or tack-welded toeboards. Rate Unable to verify unless tested."}, {"id": "F1", "g": "F", "cite": "1910.25(b)(2)", "tags": ["FP_stairs", "FP_ship"], "sev": "yellow", "req": "Vertical clearance above any stair tread to an overhead obstruction is at least 6 ft 8 in, measured from the tread's leading edge.", "check": "Check for beams, ducts or aircraft structure over the stair."}, {"id": "F2", "g": "F", "cite": "1910.25(b)(3)", "tags": ["FP_stairs", "FP_ship"], "sev": "yellow", "req": "Riser heights and tread depths are uniform between landings.", "check": "Measure each riser and tread in the flight."}, {"id": "F3", "g": "F", "cite": "1910.25(b)(4)", "tags": ["FP_stairs", "FP_ship"], "sev": "yellow", "auto": "landing", "req": "Landings and platforms are at least as wide as the stair and at least 30 inches deep in the direction of travel.", "check": "Measure top landing depth and width."}, {"id": "F4", "g": "F", "cite": "1910.25(b)(6)", "tags": ["FP_stairs", "FP_ship"], "sev": "red", "req": "Each stair supports at least five times the normal anticipated live load, and never less than a 1,000 lb concentrated load at any point.", "check": "Needs design data or testing. Without them, rate Unable to verify."}, {"id": "F5", "g": "F", "cite": "1910.25(c)(1)", "tags": ["FP_stairs"], "sev": "yellow", "auto": "stairAngle", "req": "Standard stairs are installed between 30 and 50 degrees from horizontal.", "check": "Measure the stringer angle with a digital angle finder."}, {"id": "F6", "g": "F", "cite": "1910.25(c)(2), (c)(3), (c)(5)", "tags": ["FP_stairs"], "sev": "yellow", "auto": "stairRT", "req": "Risers are no more than 9.5 inches and treads at least 9.5 inches deep. Stairs installed before January 17, 2017 are deemed compliant if they meet Table D-1 or the 30 to 50 degree angle.", "check": "Measure the largest riser and smallest tread. Most legacy units fall under the pre-2017 provision."}, {"id": "F7", "g": "F", "cite": "1910.25(c)(4)", "tags": ["FP_stairs"], "sev": "yellow", "auto": "stairWidth", "req": "Standard stairs are at least 22 inches wide between vertical barriers.", "check": "Measure clear width between rails or stringers."}, {"id": "F8", "g": "F", "cite": "1910.29(f)(1)(i)", "tags": ["FP_stairs"], "sev": "yellow", "auto": "handrail", "req": "Handrails are 30 to 38 inches high, measured from the leading edge of the tread to the top of the rail.", "check": "Measure at several treads. A stair rail's top rail may serve as the handrail only if it is 36 to 38 inches high and meets the other handrail rules [1910.29(f)(1)(iii)]."}, {"id": "F9", "g": "F", "cite": "1910.29(f)(1)(ii)", "tags": ["FP_stairs"], "sev": "yellow", "auto": "stairRail", "req": "Stair rail systems are at least 30 inches high if installed before January 17, 2017, and at least 42 inches if installed on or after that date.", "check": "Measure from tread leading edge to top of rail. Confirm the install date with the customer."}, {"id": "F10", "g": "F", "cite": "1910.29(f)(2), (3), (5), (6)", "tags": ["FP_stairs", "FP_ship"], "sev": "yellow", "req": "Handrails have at least 2.25 inches of finger clearance, a shape employees can grasp firmly, and smooth surfaces, and rail ends do not create projection hazards.", "check": "Check clearance to walls and posts, the rail profile, burrs and sharp or protruding ends."}, {"id": "F11", "g": "F", "cite": "1910.29(f)(4)", "tags": ["FP_stairs", "FP_ship"], "sev": "yellow", "req": "No opening in a stair rail system exceeds 19 inches at its least dimension.", "check": "Measure the largest opening below the stair rail."}, {"id": "F12", "g": "F", "cite": "1910.29(f)(7)", "tags": ["FP_stairs", "FP_ship"], "sev": "red", "req": "Handrails and stair rail top rails withstand at least 200 lb downward or outward within 2 inches of the top edge.", "check": "Rate Unable to verify unless tested. Note rails that move under hand pressure."}, {"id": "F13", "g": "F", "cite": "1910.25(b)(8), (e)", "tags": ["FP_ship"], "sev": "yellow", "auto": "shipStair", "req": "Ship stairs are used only where standard stairs are not feasible, slope 50 to 70 degrees, have open risers with a 6.5 to 12 inch rise, treads at least 4 inches deep and at least 18 inches wide.", "check": "Measure angle, rise, tread depth and width. Ask why standard stairs were not used."}, {"id": "F14", "g": "F", "cite": "1910.28(b)(11)(iii)", "tags": ["FP_ship"], "sev": "red", "req": "Ship stairs have handrails on both sides.", "check": "Confirm a handrail on each side."}, {"id": "G1", "g": "G", "cite": "1910.23(b)(2)", "tags": ["FP_ladder"], "sev": "yellow", "auto": "rungSpacing", "req": "Rungs are spaced 10 to 14 inches apart, centerline to centerline.", "check": "Measure several rung spacings."}, {"id": "G2", "g": "G", "cite": "1910.23(b)(4)", "tags": ["FP_ladder"], "sev": "yellow", "auto": "rungWidth", "req": "Fixed ladder rungs have a minimum clear width of 16 inches.", "check": "Measure between side rails."}, {"id": "G3", "g": "G", "cite": "1910.23(d)(2)", "tags": ["FP_ladder"], "sev": "yellow", "auto": "rungBehind", "req": "At least 7 inches from rung centerline to the nearest permanent object behind the ladder.", "check": "Measure toe clearance behind rungs."}, {"id": "G4", "g": "G", "cite": "1910.23(d)(4), (d)(7)", "tags": ["FP_ladder"], "sev": "red", "auto": "railExt", "req": "Side rails of through or side-step ladders, or grab bars, extend at least 42 inches above the landing served.", "check": "Measure from landing surface to top of side rails or grab bars."}, {"id": "G5", "g": "G", "cite": "1910.23(d)(13)", "tags": ["FP_ladder"], "sev": "yellow", "req": "Ladders without cages or wells have at least 15 inches clear each side of centerline and 30 inches on the climbing side.", "check": "Check for obstructions beside and in front of the ladder."}, {"id": "G6", "g": "G", "cite": "1910.28(b)(9)", "tags": ["FP_ladder_gt24"], "sev": "red", "req": "Fixed ladders extending more than 24 ft have fall protection. Installed before November 19, 2018: a personal fall arrest system, ladder safety system, cage or well. Installed on or after that date, or any replaced section: a personal fall arrest or ladder safety system. By November 18, 2036 every such ladder needs a personal fall arrest or ladder safety system.", "check": "Record ladder length and the fall protection provided."}, {"id": "H1", "g": "H", "cite": "1910.30(b)(1)", "tags": ["all"], "sev": "yellow", "req": "Each employee is trained in the proper care, inspection, storage and use of the equipment before using it.", "check": "Ask for training records or a sign-off sheet covering these units."}, {"id": "H2", "g": "H", "cite": "1910.30(a)", "tags": ["guardrail"], "sev": "yellow", "req": "Employees exposed to fall hazards who are required to be trained (including personal fall protection users) are trained by a qualified person before exposure.", "check": "Ask who delivers fall hazard training and how often."}, {"id": "H3", "g": "H", "cite": "1910.23(b)(11), (b)(12)", "tags": ["ladder"], "sev": "yellow", "req": "Employees face the unit when climbing and keep at least one hand on it while climbing up or down.", "check": "Observe climbing. Steps without handholds make this hard to do."}, {"id": "H4", "g": "H", "cite": "1910.23(b)(13)", "tags": ["ladder"], "sev": "yellow", "req": "No employee carries an object or load that could cause a loss of balance while climbing.", "check": "Observe how tools and parts reach the deck. Note whether a tool tray or hoist is needed."}, {"id": "H5", "g": "H", "cite": "1910.30(c)", "tags": ["all"], "sev": "yellow", "req": "Employees are retrained when workplace or equipment changes make earlier training obsolete, or when an employee's use of the equipment shows they lack the needed understanding or skill.", "check": "Ask whether training was refreshed after units were modified or replaced, and how misuse is handled."}, {"id": "I1", "g": "I", "cite": "Observation", "tags": ["all"], "sev": "red", "req": "Welds are free of cracks, porosity, incomplete fusion and undercut, and prior weld repairs are sound.", "check": "Inspect every primary joint with a light and mirror, especially leg-to-base, stringer and rail-post welds. Photograph anything questionable."}, {"id": "I2", "g": "I", "cite": "Observation", "tags": ["all"], "sev": "red", "req": "Structural members are not bent, dented, twisted or cracked, and the frame is square and not racked.", "check": "Sight along members. Check diagonals for racking."}, {"id": "I3", "g": "I", "cite": "Observation", "tags": ["all"], "sev": "yellow", "req": "Fasteners, pins and hardware are present, tight and secured.", "check": "Check every bolted connection, pin and clip."}, {"id": "I4", "g": "I", "cite": "Observation", "tags": ["mobile"], "sev": "yellow", "req": "Casters swivel and roll freely, wheels are not flat-spotted or chunked, and stems or mounting plates are tight and undamaged.", "check": "Lift-check play, spin each wheel, check brake engagement."}, {"id": "I5", "g": "I", "cite": "Observation (ANSI A14.7)", "tags": ["all"], "sev": "yellow", "req": "The unit is marked with its rated load, an ID number and the date of last inspection.", "check": "Note what markings exist. Unmarked units cannot show their capacity to users."}, {"id": "I6", "g": "I", "cite": "Observation", "tags": ["all"], "sev": "yellow", "req": "Coatings are intact and base metal is not corroded, including at dissimilar-metal joints.", "check": "Note coating loss and white or red corrosion product."}, {"id": "I7", "g": "I", "cite": "Observation", "tags": ["all"], "sev": "yellow", "req": "The unit sits level and stable on the floor where it is used.", "check": "Check for rocking, floor slope, drains or trench covers under casters."}, {"id": "J1", "g": "J", "cite": "1910.28(b)(1)(i)", "tags": ["inpos"], "sev": "red", "req": "In its working position, the gap between the deck edge and the equipment does not leave an unprotected edge an employee could fall through, or that edge is protected by rails, deck extensions, sliders or another fall protection means.", "check": "Measure the largest gap at the work side in each position the unit is used. Note where the equipment curves or tapers away from the deck."}, {"id": "J2", "g": "J", "cite": "1910.28(b)(1)(i)", "tags": ["inpos"], "sev": "red", "req": "Sides left open to reach the work face the equipment closely, and every other side or end 4 ft or more above the floor is guarded.", "check": "With the unit in place, walk the deck. Record each open side, what it faces, and whether removable rails are put back when not needed."}, {"id": "J3", "g": "J", "cite": "Observation", "tags": ["inpos"], "sev": "red", "req": "Employees can reach the work from the deck without leaning over, standing on or climbing the rails.", "check": "Watch a technician do the task. Note reach distance, overhead work and any use of the rails as a step."}, {"id": "J4", "g": "J", "cite": "Observation", "tags": ["inpos"], "sev": "yellow", "req": "The unit rests against the equipment through bumpers or pads, does not load or damage it, and does not shift as people work.", "check": "Check bumper condition and contact points, and watch for the unit walking away from the equipment during work."}]};
+const LOGO = "data:image/png;base64,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";
+const TYPEDESC = {MS:"Rolls. Steps up to a top step; the work is done from the steps.", MP:"Rolls. Steps up to a deck people stand and work on.", FP:"Does not roll. Fixed, bolted or set on feet."};
+const ITEMS = KIT.items, GROUPS = KIT.groups, MEAS = KIT.measures;
+const ITEM = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const TYPES = {MS:"Mobile ladder stand", MP:"Mobile ladder stand platform", FP:"Fixed / stationary platform"};
+const ACCESS = {none:"Not applicable", stairs:"Standard stairs", ship:"Ship stairs", ladder:"Fixed ladder"};
+const STATUS = {C:"Compliant", NC:"Non-compliant", UV:"Unable to verify", NA:"Not applicable"};
+const SHORT = {C:"Pass", NC:"Fail", UV:"Can't verify", NA:"N/A"};
+const RATING = {
+  red:{label:"Red", action:"Remove from service now"},
+  yellow:{label:"Yellow", action:"Correct before continued use"},
+  gray:{label:"Gray", action:"Engineering verification needed"},
+  green:{label:"Green", action:"No deficiencies found"},
+  none:{label:"In progress", action:"Not fully rated"}
+};
+const ACTIONS = {"":"Not selected", keep:"Keep in service as is", repair:"Repair", retrofit:"Retrofit", replace:"Replace", engineer:"Engineering review / load test"};
+const AUTO_KEYS = {uniformRise:["riseMax","riseMin"],stepWidth:["stepWidth"],casters:["mil","unitWt","casters","casterRating"],stepRail:["stepRail"],baseRatio:["H","baseMin"],steps:["riseMax","depthMin","stringerAngle"],topRail:["topRail"],platRail36:["platRail","midRail"],guardRail:["platRail"],opening:["maxOpening","midRail"],toe:["toeH","toeGap"],landing:["landingDepth"],stairAngle:["stairAngle"],stairRT:["stairRise","stairTread"],stairWidth:["stairWidth"],handrail:["handrailH"],stairRail:["stairRailH"],shipStair:["stairAngle","stairRise","stairTread","stairWidth"],rungSpacing:["rungSpacing"],rungWidth:["rungWidth"],rungBehind:["rungBehind"],railExt:["railExt"]};
+const DEFAULT_SCOPE = "JE Technology Solutions, Inc. (JE) performed a visual and dimensional assessment of the listed work stands and platforms against the requirements of 29 CFR 1910 Subpart D, Walking-Working Surfaces. Findings reflect conditions observed and measured on the assessment date. This is not a professional engineering certification, load test or design review. Requirements that depend on structural capacity (for example 1910.22(b), 1910.23(e)(1)(iii) and 1910.29(b)(3)) cannot be confirmed by visual inspection and are rated Unable to verify unless design data or test results were provided. Concealed conditions such as internal corrosion or cracks under coatings may not be detected. JE does not assume responsibility for the existing equipment or for its continued use. The employer remains responsible for compliance with OSHA requirements.";
+const CACHE_KEY = "je-sa-v2", V1_KEY = "je-stand-assessment-v1";
+const PDF_SRC = ["https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js","https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"];
+
+/* ---------- utilities ---------- */
+const $ = id => document.getElementById(id);
+function uid(){return (Date.now().toString(36)+Math.random().toString(36).slice(2,8))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function num(v){if(v==null)return null;const t=String(v).trim().replace(/,/g,".").replace(/["″]/g,"");if(!t)return null;let m=t.match(/^(\d+(?:\.\d+)?)[\s-]+(\d+)\/(\d+)$/);if(m)return +m[1]+(+m[3]?m[2]/m[3]:0);m=t.match(/^(\d+)\/(\d+)$/);if(m)return +m[2]?m[1]/m[2]:null;const n=parseFloat(t);return Number.isFinite(n)?n:null}
+function fmt(n,d=1){return n==null?"–":(Math.round(n*10**d)/10**d).toString()}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function nl(s){return esc(s).replace(/\n/g,"<br>")}
+
+/* ---------- state ---------- */
+// S.list[aid] = {meta, order:[sid], created, updated, example, summary}
+// S.stands[aid][sid] = stand
+let S = {list:{}, stands:{}, cur:null, curStand:null};
+let dirty = new Map();           // doc path -> {op:"set"|"delete", seq}
+let mode = "local";              // "local" | "db"
+const inViewer = !!(window.claude && typeof window.claude.use === "function");
+let db=null, assets=null, downloads=null;
+let ui = {view:"info", sub:"checklist", filter:"all", notes:new Set()};
+let reachable=false, loadTimedOut=false, failCount=0, readOnly=false, flushing=false;
+
+function blankMeta(){return {customer:"",site:"",address:"",contact:"",date:new Date().toISOString().slice(0,10),assessor:"Mitchell Hamilton",assessorTitle:"Government Business Development and Capture Manager",company:"JE Technology Solutions, Inc.",ref:"",scope:DEFAULT_SCOPE,summaryNote:""}}
+function blankStand(code){return {uid:uid(),code,name:"",location:"",type:"MP",access:"none",pre2017:true,built:"",use:"",users:"",m:{},r:{},photos:[],action:{type:"",desc:"",rom:""},notes:"",reported:"",pos:"free",posNote:""}}
+const curA = () => S.cur ? S.list[S.cur] : null;
+const standsOf = aid => S.stands[aid] || (S.stands[aid] = {});
+function orderedStands(aid){
+  const a=S.list[aid]; if(!a) return []; const map=standsOf(aid);
+  const seen=new Set(); const out=[];
+  for(const id of a.order||[]) if(map[id]&&!seen.has(id)){out.push(map[id]);seen.add(id)}
+  for(const id of Object.keys(map)) if(!seen.has(id)) out.push(map[id]);
+  return out;
+}
+const curS = () => { const m=standsOf(S.cur); return m[S.curStand] || orderedStands(S.cur)[0] || null; };
+
+let cacheT=null;
+function saveCache(){clearTimeout(cacheT);cacheT=setTimeout(()=>{try{localStorage.setItem(CACHE_KEY,JSON.stringify({list:S.list,stands:S.stands,cur:S.cur,curStand:S.curStand,dirty:[...dirty]}))}catch(e){toast("This device's storage is full. Let it sync, or save a backup.")}},250)}
+function loadCache(){
+  try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); if(c&&c.list){S.list=c.list;S.stands=c.stands||{};S.cur=c.cur;S.curStand=c.curStand;dirty=new Map(c.dirty||[]);return true}}catch(e){}
+  return false;
+}
+function migrateV1(){
+  try{const v=JSON.parse(localStorage.getItem(V1_KEY)||"null"); if(!v||!v.meta) return false; importBackup(v,true); return true}catch(e){return false}
+}
+
+/* ---------- persistence: dirty queue ---------- */
+const aPath = aid => `assessments/${aid}`;
+const sPath = (aid,sid) => `assessments/${aid}/stands/${sid}`;
+function mark(path,op="set"){if(!inViewer){saveCache();return}const d=dirty.get(path);dirty.set(path,{op,seq:(d?d.seq:0)+1});saveCache();scheduleFlush();renderSync()}
+function touchA(aid){const a=S.list[aid];if(!a)return;a.updated=Date.now();mark(aPath(aid))}
+function touchS(s,aid=S.cur){
+  mark(sPath(aid,s.uid));
+  const a=S.list[aid]; if(!a) return;
+  const sum=summaryOf(aid); if(JSON.stringify(sum)!==JSON.stringify(a.summary||{})){a.summary=sum;touchA(aid)}
+}
+function summaryOf(aid){const c={n:0,red:0,yellow:0,gray:0,green:0,none:0};for(const s of orderedStands(aid)){c.n++;c[standRating(s).color]++}return c}
+
+let flushT=null;
+function scheduleFlush(ms=700){if(mode!=="db"||readOnly)return;clearTimeout(flushT);flushT=setTimeout(flush,ms)}
+async function flush(){
+  if(mode!=="db"||flushing||readOnly) return;
+  flushing=true; renderSync();
+  try{
+    for(const [path,d] of [...dirty]){
+      const seq=d.seq;
+      try{
+        if(d.op==="delete") await db.doc(path).delete();
+        else { const body=await bodyFor(path); if(body===null){dirty.delete(path);continue} await db.doc(path).set(body); }
+        const now=dirty.get(path); if(now&&now.seq===seq) dirty.delete(path);
+        failCount=0; reachable=true;
+      }catch(e){ onWriteError(e); break; }
+    }
+  } finally {
+    flushing=false; saveCache(); renderSync();
+    if(dirty.size&&!readOnly) scheduleFlush(failCount?Math.min(60000,4000*failCount):400);
+  }
+}
+function onWriteError(e){
+  const code=e&&e.code;
+  if(code==="invalid_argument"||code==="not_granted"||code==="revoked"){readOnly=true;renderBanners();return}
+  if(code==="quota_exceeded") toast("Storage for this tool is full. Delete old assessments to free space.");
+  failCount++;
+}
+async function bodyFor(path){
+  const p=path.split("/");
+  if(p.length===2){const a=S.list[p[1]];if(!a)return null;return {meta:a.meta,order:a.order||[],created:a.created||Date.now(),updated:a.updated||Date.now(),example:!!a.example,summary:a.summary||{}}}
+  const s=(S.stands[p[1]]||{})[p[3]]; if(!s) return null;
+  await uploadPending(s);
+  return serializeStand(s);
+}
+function serializeStand(s){
+  const o=clone(s); delete o.uid;
+  o.photos=(s.photos||[]).filter(p=>p.id).map(p=>({id:p.id,caption:p.caption||"",pid:p.pid||p.id}));
+  return o;
+}
+async function uploadPending(s){
+  if(!assets) return;
+  for(const p of s.photos||[]){
+    if(p.id||!p.data) continue;
+    const blob=await (await fetch(p.data)).blob();
+    const r=await assets.upload(blob,{type:"image/jpeg"});
+    p.id=r.id; delete p.data; saveCache();
+  }
+}
+const photoSrc = p => p.id ? "/_blob/"+p.id : (p.data||"");
+
+/* ---------- live sync ---------- */
+let unsubList=null, unsubStands=null, subAid=null, loadTimer=null;
+function startSync(){
+  loadTimer=setTimeout(()=>{if(!reachable){loadTimedOut=true;renderSync();renderBanners()}},10000);
+  unsubList=db.collection("assessments").onSnapshot(snap=>{
+    let changed=false; const seen=new Set();
+    for(const d of snap.docs){
+      seen.add(d.id); if(dirty.has(aPath(d.id))) continue;
+      const inc=clone(d.data()); const loc=S.list[d.id];
+      if(!loc||JSON.stringify(loc)!==JSON.stringify(inc)){S.list[d.id]=inc;changed=true}
+    }
+    if(!snap.metadata.fromCache){
+      if(!reachable) changed=true;
+      reachable=true; loadTimedOut=false; clearTimeout(loadTimer);
+      for(const id of Object.keys(S.list)) if(!seen.has(id)&&!dirty.has(aPath(id))){delete S.list[id];delete S.stands[id];changed=true}
+    }
+    if(S.cur&&!S.list[S.cur]){S.cur=defaultAid();changed=true}
+    if(!S.cur&&Object.keys(S.list).length){S.cur=defaultAid();changed=true}
+    if(changed){saveCache();subscribeStands();softRender()}
+    renderSync();
+  }, err=>{ if(err&&err.code==="revoked"){readOnly=true} renderSync(); renderBanners(); });
+  subscribeStands();
+}
+function subscribeStands(){
+  if(mode!=="db"||subAid===S.cur) return;
+  if(unsubStands){unsubStands();unsubStands=null}
+  subAid=S.cur; if(!S.cur) return;
+  const aid=S.cur;
+  unsubStands=db.collection(`assessments/${aid}/stands`).onSnapshot(snap=>{
+    const local=standsOf(aid); const seen=new Set(); let changed=false;
+    for(const d of snap.docs){
+      seen.add(d.id); if(dirty.has(sPath(aid,d.id))) continue;
+      const inc=clone(d.data()); inc.uid=d.id; const loc=local[d.id];
+      inc.photos=[...(inc.photos||[]),...((loc&&loc.photos)||[]).filter(p=>!p.id)];
+      if(!loc||JSON.stringify(loc)!==JSON.stringify(inc)){local[d.id]=inc;changed=true}
+    }
+    if(!snap.metadata.fromCache) for(const id of Object.keys(local)) if(!seen.has(id)&&!dirty.has(sPath(aid,id))){delete local[id];changed=true}
+    if(changed){saveCache();softRender()}
+  }, ()=>{});
+}
+function defaultAid(){const ids=Object.keys(S.list);ids.sort((a,b)=>(S.list[b].updated||0)-(S.list[a].updated||0));return ids[0]||null}
+
+let pendingRender=false;
+function softRender(){
+  const ae=document.activeElement;
+  if(ae&&$("main").contains(ae)&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){pendingRender=true;return}
+  const y=window.scrollY; render(); window.scrollTo(0,y);
+}
+document.addEventListener("focusout",()=>{setTimeout(()=>{if(pendingRender){const ae=document.activeElement;if(!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))){pendingRender=false;softRender()}}},50)});
+window.addEventListener("online",()=>{failCount=0;scheduleFlush(100);renderSync()});
+window.addEventListener("offline",renderSync);
+
+/* ---------- applicability and auto checks ---------- */
+function tagsFor(s){
+  const H=num(s.m.H)??0, t=new Set(["all"]);
+  if(s.type==="MS"||s.type==="MP"){t.add("mobile");t.add("ladder");if(H>=4)t.add("mobile_ge4")}
+  if(s.type==="MS"){t.add("MS");if(H>10){t.add("MS_gt10");if((num(s.m.topDepth)??0)>=20)t.add("MS_gt10_deep")}}
+  if(s.type==="MP"){t.add("MP");if(H>=4&&H<=10)t.add("MP_4to10");if(H>10)t.add("MP_gt10")}
+  if(s.type==="FP"){if(H>=4)t.add("FP_ge4");
+    if(s.access==="stairs")t.add("FP_stairs");if(s.access==="ship")t.add("FP_ship");
+    if(s.access==="ladder"){t.add("FP_ladder");t.add("ladder");if(H>24)t.add("FP_ladder_gt24")}}
+  if(s.pos==="in")t.add("inpos");
+  if(t.has("MP_gt10")||t.has("FP_ge4"))t.add("guardrail");
+  if(t.has("MP_gt10")||t.has("FP_ge4")||t.has("MS_gt10_deep"))t.add("toeboard");
+  return t;
+}
+const itemsFor = s => {const t=tagsFor(s);return ITEMS.filter(i=>i.tags.some(x=>t.has(x)))};
+const measuresFor = s => {const t=tagsFor(s);return MEAS.filter(m=>m.tags.some(x=>t.has(x)))};
+const range=(v,lo,hi)=>v>=lo&&v<=hi;
+function autoCheck(id,s){
+  const m=k=>num(s.m[k]); const it=ITEM[id]; if(!it||!it.auto) return null;
+  const R=(ok,msg)=>({s:ok?"C":"NC",msg});
+  switch(it.auto){
+    case "uniformRise":{const a=m("riseMax"),b=m("riseMin");if(a==null||b==null)return null;return {s:null,msg:`Rise spread ${fmt(a-b,2)} in (${fmt(b,2)}–${fmt(a,2)} in). Judge uniformity yourself.`}}
+    case "stepWidth":{const v=m("stepWidth");if(v==null)return null;return R(v>=16,`Step width ${fmt(v,2)} in, need ≥ 16 in`)}
+    case "casters":{const l=m("mil"),w=m("unitWt"),n=m("casters"),c=m("casterRating");if(l==null||w==null||!n)return null;const need=(4*l+w)/n;if(c==null)return {s:null,msg:`Each caster must be rated ≥ ${fmt(need,0)} lb. Caster rating unknown.`};return R(c>=need,`Caster rated ${fmt(c,0)} lb, need ≥ ${fmt(need,0)} lb each`)}
+    case "stepRail":{const v=m("stepRail");if(v==null)return null;return R(range(v,29.5,37),`Step handrail ${fmt(v,2)} in, need 29.5–37 in`)}
+    case "baseRatio":{const h=m("H"),b=m("baseMin");if(h==null||b==null)return null;const max=4*b/12;return R(h<=max,`Height ${fmt(h,2)} ft, limit ${fmt(max,2)} ft (4 × ${fmt(b,1)} in base) without outriggers`)}
+    case "steps":{const r=m("riseMax"),d=m("depthMin"),a=m("stringerAngle");if(r==null&&d==null&&a==null)return null;const bad=[];if(r!=null&&r>10)bad.push(`rise ${fmt(r,2)} in > 10`);if(d!=null&&d<7)bad.push(`depth ${fmt(d,2)} in < 7`);if(a!=null&&a>60)bad.push(`slope ${fmt(a,1)}° > 60`);return R(!bad.length,bad.length?bad.join("; "):"Rise, depth and slope within limits")}
+    case "topRail":{const v=m("topRail");if(v==null)return null;return R(v>=36,`Top step handrail ${fmt(v,2)} in, need ≥ 36 in`)}
+    case "platRail36":{const v=m("platRail"),mr=m("midRail");if(v==null)return null;if(v<36)return R(false,`Top rail ${fmt(v,2)} in, need ≥ 36 in`);if(mr==null||mr<=0)return R(false,`Top rail ${fmt(v,2)} in OK; no midrail recorded`);return R(true,`Top rail ${fmt(v,2)} in, midrail ${fmt(mr,2)} in`)}
+    case "guardRail":{const v=m("platRail");if(v==null)return null;if(v<39)return R(false,`Top rail ${fmt(v,2)} in, need 39–45 in`);if(v>45)return {s:"C",msg:`Top rail ${fmt(v,2)} in (above 45 in only if all other 1910.29(b) criteria are met)`};return R(true,`Top rail ${fmt(v,2)} in, within 42 ± 3 in`)}
+    case "opening":{const o=m("maxOpening"),t=m("platRail"),mr=m("midRail");if(o==null)return null;let msg=`Largest opening ${fmt(o,2)} in, max 19 in`;if(t!=null&&mr!=null)msg+=` · midrail ${fmt(mr,1)} in, midway is ${fmt(t/2,1)} in`;return R(o<=19,msg)}
+    case "toe":{const h=m("toeH"),g=m("toeGap");if(h==null&&g==null)return null;const bad=[];if(h===0)bad.push("no toeboard");else if(h!=null&&h<3.5)bad.push(`height ${fmt(h,2)} in < 3.5`);if(g!=null&&g>0.25)bad.push(`gap ${fmt(g,2)} in > 0.25`);return R(!bad.length,bad.length?bad.join("; "):"Toeboard height and gap within limits")}
+    case "landing":{const v=m("landingDepth");if(v==null)return null;return R(v>=30,`Landing depth ${fmt(v,1)} in, need ≥ 30 in`)}
+    case "stairAngle":{const v=m("stairAngle");if(v==null)return null;return R(range(v,30,50),`Stair angle ${fmt(v,1)}°, need 30–50°`)}
+    case "stairRT":{const r=m("stairRise"),t=m("stairTread"),a=m("stairAngle");if(r==null&&t==null)return null;const ok=(r==null||r<=9.5)&&(t==null||t>=9.5);if(ok)return R(true,"Riser and tread within 9.5 in limits");if(s.pre2017&&a!=null&&range(a,30,50))return {s:"C",msg:"Outside 9.5 in limits, but a pre-2017 stair at 30–50° is deemed compliant under 1910.25(c)(5)"};return R(false,`Riser ${fmt(r,2)} in / tread ${fmt(t,2)} in outside limits`+(s.pre2017?"; check Table D-1":""))}
+    case "stairWidth":{const v=m("stairWidth");if(v==null)return null;return R(v>=22,`Width ${fmt(v,1)} in, need ≥ 22 in`)}
+    case "handrail":{const v=m("handrailH");if(v==null)return null;return R(range(v,30,38),`Handrail ${fmt(v,2)} in, need 30–38 in`)}
+    case "stairRail":{const v=m("stairRailH");if(v==null)return null;const need=s.pre2017?30:42;return R(v>=need,`Stair rail ${fmt(v,2)} in, need ≥ ${need} in`)}
+    case "shipStair":{const a=m("stairAngle"),r=m("stairRise"),t=m("stairTread"),w=m("stairWidth");if(a==null&&r==null&&t==null&&w==null)return null;const bad=[];if(a!=null&&!range(a,50,70))bad.push(`angle ${fmt(a,1)}°`);if(r!=null&&!range(r,6.5,12))bad.push(`rise ${fmt(r,2)} in`);if(t!=null&&t<4)bad.push(`tread ${fmt(t,2)} in`);if(w!=null&&w<18)bad.push(`width ${fmt(w,1)} in`);return R(!bad.length,bad.length?"Outside limits: "+bad.join(", "):"Angle, rise, tread and width within limits")}
+    case "rungSpacing":{const v=m("rungSpacing");if(v==null)return null;return R(range(v,10,14),`Rung spacing ${fmt(v,2)} in, need 10–14 in`)}
+    case "rungWidth":{const v=m("rungWidth");if(v==null)return null;return R(v>=16,`Clear width ${fmt(v,2)} in, need ≥ 16 in`)}
+    case "rungBehind":{const v=m("rungBehind");if(v==null)return null;return R(v>=7,`Clearance ${fmt(v,2)} in, need ≥ 7 in`)}
+    case "railExt":{const v=m("railExt");if(v==null)return null;return R(v>=42,`Extension ${fmt(v,1)} in, need ≥ 42 in`)}
+  }
+  return null;
+}
+function autoAll(s){
+  for(const it of ITEMS){ if(!it.auto) continue; const a=autoCheck(it.id,s); const r=s.r[it.id];
+    if(a&&a.s){ if(!r||!r.s||r.auto) s.r[it.id]={s:a.s,note:r?r.note||"":"",sev:r?r.sev||null:null,auto:true} }
+    else if(r&&r.auto){ s.r[it.id]={...r,s:"",auto:false} } }
+}
+const sevOf=(it,r)=>(r&&r.sev)||it.sev;
+function standRating(s){
+  const items=itemsFor(s); let nc=0,ncRed=0,uv=0,done=0;
+  for(const it of items){const r=s.r[it.id]; if(r&&r.s){done++; if(r.s==="NC"){nc++; if(sevOf(it,r)==="red")ncRed++} if(r.s==="UV")uv++}}
+  let color=ncRed?"red":nc?"yellow":uv?"gray":"green";
+  if(!ncRed&&done<items.length) color = nc ? "yellow" : "none";
+  if(!items.length) color="none";
+  return {color,nc,ncRed,uv,done,total:items.length};
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===ui.view)));
+  for(const v of ["info","stands","report"]) $("v-"+v).hidden = v!==ui.view;
+  renderBanners(); renderSync(); renderTabInfo();
+  if(ui.view==="info") renderInfo(); else if(ui.view==="stands") renderStands(); else renderReportView();
+}
+function show(view){ui.view=view;try{sessionStorage.setItem("je-ui",JSON.stringify({view:ui.view,sub:ui.sub}))}catch(e){} render(); window.scrollTo(0,0); if(view==="stands") requestWake()}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+
+function renderTabInfo(){
+  const a=curA(); $("ti-info").textContent = a ? (a.meta.customer||"Untitled").slice(0,16) : "None";
+  const n=a?orderedStands(S.cur).length:0; $("ti-stands").textContent = n ? `${n} unit${n>1?"s":""}` : "–";
+}
+function renderSync(){
+  const el=$("sync"), t=$("sync-t"); let cls="", txt="";
+  if(mode==="local"){ cls=""; txt = inViewer ? "This device only" : "Saved on device"; }
+  else if(readOnly){ cls="off"; txt="Read only"; }
+  else if(dirty.size){ const off=!navigator.onLine||failCount>0; cls=off?"off":"busy"; txt= off?`Offline · ${dirty.size} waiting`:"Saving…"; }
+  else if(!reachable){ cls= loadTimedOut?"off":"busy"; txt= loadTimedOut?"Can't reach saved data":"Connecting…"; }
+  else { cls="ok"; txt="Synced"; }
+  el.className="chip-sync "+cls; t.textContent=txt;
+}
+$("sync").addEventListener("click",()=>{
+  if(mode==="local") toast(inViewer?"Saving to the shared record isn't available here. Work stays on this device; save a backup to keep it.":"Work saves in this browser. Save a backup to keep a file copy.");
+  else if(dirty.size) toast(`${dirty.size} change${dirty.size>1?"s":""} saved on this device, waiting to sync. They upload when you have signal.`);
+  else toast("All changes are synced. Open this page on any device to continue.");
+});
+
+function renderBanners(){
+  const b=[]; const a=curA();
+  if(a&&a.example) b.push(`<div class="banner"><p><strong>Example data.</strong> This assessment is a made-up sample showing how ratings and the report work. Start a new assessment for your site visit.</p><button class="btn primary sm" type="button" data-act="new">New assessment</button></div>`);
+  if(readOnly) b.push(`<div class="banner bad"><p><strong>Read only.</strong> You can view assessments but this account can't save changes to them. Ask the owner for Contributor access.</p></div>`);
+  else if(mode==="db"&&loadTimedOut&&!reachable) b.push(`<div class="banner bad"><p><strong>No connection to saved data.</strong> You can keep working. Changes stay on this device and sync when signal returns.</p></div>`);
+  $("banners").innerHTML=b.join(""); $("banners").hidden=!b.length;
+  $("banners").querySelectorAll('[data-act="new"]').forEach(x=>x.onclick=newAssessment);
+}
+
+/* ----- Assessment view ----- */
+const META_FIELDS=[["customer","Customer"],["site","Site / facility"],["address","Site address"],["contact","Customer point of contact"],["date","Assessment date","date"],["ref","Reference / quote no."],["assessor","Assessor"],["assessorTitle","Assessor title"],["company","Assessing company"],["summaryNote","Executive summary notes","area"],["scope","Scope and limitations statement","area"]];
+function renderInfo(){
+  const V=$("v-info"); const a=curA();
+  const ids=Object.keys(S.list).sort((x,y)=>(S.list[y].meta.date||"").localeCompare(S.list[x].meta.date||"")||(S.list[y].updated||0)-(S.list[x].updated||0));
+  const listHTML = ids.length ? `<div class="alist">${ids.map(id=>{const x=S.list[id];const sm=id===S.cur?summaryOf(id):(x.summary||{});return `<div class="arow" aria-current="${id===S.cur}"><div style="min-width:0"><div class="t">${esc(x.meta.customer||"Untitled assessment")}${x.example?" (example)":""}</div><div class="m">${esc(x.meta.site||"No site")} · ${esc(x.meta.date||"")} · ${sm.n||0} unit${sm.n===1?"":"s"}</div><div class="dots">${["red","yellow","gray","green"].map(k=>Array.from({length:sm[k]||0},()=>`<span class="dot ${k}"></span>`).join("")).join("")}</div></div><div class="row">${id===S.cur?`<button class="btn sm" type="button" data-go="${id}">Go to stands</button>`:`<button class="btn sm" type="button" data-open="${id}">Open</button>`}<button class="btn sm danger" type="button" data-del="${id}">Delete</button></div></div>`}).join("")}</div>`
+    : `<div class="empty"><h3>No assessments yet</h3><p>Start one before your site visit. It syncs to every device you open this page on.</p></div>`;
+  if(mode==="db"&&!reachable&&!loadTimedOut&&!ids.length){V.innerHTML=`<div class="panel empty"><h3>Loading saved assessments…</h3></div>`;return}
+  if(!a){
+    V.innerHTML=`<div class="stack">${guideHTML()}<div class="panel pad"><div class="sec-h"><h2>Assessments</h2><button class="btn primary" type="button" id="b-newa">New assessment</button></div>${listHTML}</div></div>`;
+  } else {
+    const sm=summaryOf(S.cur);
+    V.innerHTML=`<div class="stack">
+      ${guideHTML()}
+      <div class="tiles">${["red","yellow","gray","green"].map(k=>`<div class="tile ${k}"><b class="mono">${sm[k]}</b><span>${RATING[k].label}: ${RATING[k].action}</span></div>`).join("")}</div>
+      ${sm.none?`<p class="hint" style="margin:-6px 0 0">${sm.none} unit${sm.none>1?"s":""} not fully rated yet.</p>`:""}
+      <div class="row"><button class="btn primary" type="button" id="b-gost">${sm.n?"Continue with stands":"Add the first stand"}</button><button class="btn" type="button" id="b-gorep">View report</button></div>
+      <div class="panel pad"><div class="sec-h"><h2>Assessment details</h2><span class="eyebrow">Shown on the report cover</span></div><div class="fields" id="meta-fields">
+      ${META_FIELDS.map(([k,l,t])=>`<div class="field ${t==="area"?"wide":""}"><label for="meta-${k}">${l}</label>${t==="area"?`<textarea id="meta-${k}" data-k="${k}" rows="${k==="scope"?7:3}">${esc(a.meta[k])}</textarea>`:`<input id="meta-${k}" data-k="${k}" type="${t||"text"}" value="${esc(a.meta[k])}">`}</div>`).join("")}</div></div>
+      <div class="panel pad"><div class="sec-h"><h2>All assessments</h2><button class="btn" type="button" id="b-newa">New assessment</button></div>${listHTML}</div>
+    </div>`;
+    V.querySelectorAll("[data-k]").forEach(el=>el.addEventListener("input",()=>{a.meta[el.dataset.k]=el.value;debounced("meta",()=>touchA(S.cur),600);renderTabInfo()}));
+    $("b-gost").onclick=()=>{ if(!orderedStands(S.cur).length) addStand(); show("stands") };
+    $("b-gorep").onclick=()=>show("report");
+  }
+  $("b-newa").onclick=newAssessment;
+  const gd=$("b-guide-ok"); if(gd) gd.onclick=()=>{try{localStorage.setItem("je-guide-hide","1")}catch(e){} guideHidden=true; renderInfo()};
+  V.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{openAssessment(b.dataset.open)});
+  V.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show("stands"));
+  V.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteAssessment(b.dataset.del));
+}
+let guideHidden=false; try{guideHidden=localStorage.getItem("je-guide-hide")==="1"}catch(e){}
+function guideHTML(force){ if(guideHidden&&!force) return ""; return `<div class="panel pad guide"><div class="sec-h" style="margin-bottom:4px"><h2>How it works</h2>${force?"":`<button class="btn sm" type="button" id="b-guide-ok">Got it</button>`}</div><ol>
+  <li><b>Start an assessment</b> and fill in the customer and site. It saves as you type.</li>
+  <li><b>Add each stand.</b> Pick its type and enter its height first; that decides which OSHA items apply.</li>
+  <li><b>Measure.</b> Numbers you enter rate the matching items for you.</li>
+  <li><b>Rate the checklist.</b> Tap C, NC, UV or N/A. Use <b>To do</b> to see what's left. Tap 📷 to photograph a finding.</li>
+  <li><b>Choose a recommendation</b> on the Action tab.</li>
+  <li><b>Open Report</b>, fix anything under "Before you send", then download the PDF.</li></ol>
+  <p class="hint" style="margin:8px 0 0">${inViewer?"Works on phone, tablet and computer. Open this same page on any of them to pick up where you left off.":"This copy saves on this device only. To send an assessment to someone, open the ⋯ menu and choose Save assessment file, then email that file. They open it from ⋯ → Open an assessment file."}</p></div>`}
+const debT={}; function debounced(k,fn,ms){clearTimeout(debT[k]);debT[k]=setTimeout(fn,ms)}
+function openAssessment(aid){S.cur=aid;S.curStand=null;saveCache();subscribeStands();render();window.scrollTo(0,0)}
+function newAssessment(){
+  const aid=uid(); S.list[aid]={meta:blankMeta(),order:[],created:Date.now(),updated:Date.now(),example:false,summary:{n:0}}; S.stands[aid]={};
+  S.cur=aid; S.curStand=null; touchA(aid); subscribeStands(); ui.view="info"; render(); window.scrollTo(0,0);
+  setTimeout(()=>{const f=$("meta-customer");if(f)f.focus()},50);
+}
+function deleteAssessment(aid){
+  const x=S.list[aid]; if(!x) return;
+  confirmBox(`Delete ${x.meta.customer||"this assessment"}?`,"All of its stands, ratings and photos are removed for every device. This can't be undone.","Delete",async()=>{
+    let stands=Object.values(standsOf(aid));
+    if(mode==="db"){ try{const snap=await db.collection(`assessments/${aid}/stands`).get(); const ids=new Set(stands.map(s=>s.uid)); for(const d of snap.docs) if(!ids.has(d.id)) stands.push({uid:d.id,...d.data()})}catch(e){} }
+    for(const s of stands){ for(const p of s.photos||[]) if(p.id&&assets) assets.delete(p.id).catch(()=>{}); mark(sPath(aid,s.uid),"delete"); }
+    mark(aPath(aid),"delete"); delete S.list[aid]; delete S.stands[aid];
+    if(S.cur===aid){S.cur=defaultAid();S.curStand=null;subscribeStands()}
+    saveCache(); render(); toast("Assessment deleted");
+  });
+}
+
+/* ----- Stands view ----- */
+function nextCode(){const used=new Set(orderedStands(S.cur).map(s=>s.code));let n=orderedStands(S.cur).length+1;while(used.has("S-"+String(n).padStart(2,"0")))n++;return "S-"+String(n).padStart(2,"0")}
+function addStand(){const a=curA();if(!a)return;const s=blankStand(nextCode());standsOf(S.cur)[s.uid]=s;a.order=[...(a.order||[]),s.uid];S.curStand=s.uid;ui.sub="details";touchS(s);touchA(S.cur);return s}
+
+function renderStands(){
+  const V=$("v-stands"); const a=curA();
+  if(!a){V.innerHTML=`<div class="panel empty"><h3>No assessment open</h3><p>Open or start an assessment first.</p><button class="btn primary" type="button" id="b-x">Go to assessments</button></div>`;$("b-x").onclick=()=>show("info");return}
+  const list=orderedStands(S.cur);
+  if(!list.length){V.innerHTML=`<div class="panel empty"><h3>No stands yet</h3><p>Add each unit you will assess. Tag it on site with the ID shown.</p><button class="btn primary" type="button" id="b-x">Add the first stand</button></div>`;$("b-x").onclick=()=>{addStand();render()};return}
+  const s=curS(); S.curStand=s.uid; const r=standRating(s); const idx=list.indexOf(s);
+  V.innerHTML=`<div class="grid2">
+    <aside class="panel rail"><div class="pad" style="padding-bottom:10px"><div class="sec-h" style="margin:0"><h2>Stands</h2><button class="btn primary sm" type="button" id="b-add">Add stand</button></div></div><div class="slist" id="slist"></div></aside>
+    <div style="min-width:0">
+      <div class="sticky-tools" id="stools">
+        <div class="switch">
+          <button class="nav" type="button" id="b-prev" aria-label="Previous stand" ${idx<=0?"disabled":""}>‹</button>
+          <select id="sw" aria-label="Choose stand">${list.map(x=>{const rr=standRating(x);return `<option value="${x.uid}" ${x===s?"selected":""}>${esc(x.code)} · ${esc(x.name||"Unnamed")} — ${RATING[rr.color].label}</option>`}).join("")}</select>
+          <button class="nav" type="button" id="b-next" aria-label="Next stand" ${idx>=list.length-1?"disabled":""}>›</button>
+          <button class="btn primary sm" type="button" id="b-add2" style="min-height:46px">+ Add</button>
+        </div>
+        <div class="subtabs" role="tablist" aria-label="Stand sections">
+          ${[["details","Details"],["measure","Measure"],["checklist","Checklist"],["photos","Photos"],["action","Action"]].map(([k,l])=>`<button class="subtab" role="tab" type="button" data-sub="${k}" aria-selected="${ui.sub===k}">${l}<span class="n" id="n-${k}"></span></button>`).join("")}
+        </div>
+        <div class="progress" aria-hidden="true"><span id="prog-bar" style="width:${r.total?Math.round(100*r.done/r.total):0}%"></span></div>
+      </div>
+      <div class="shead" style="margin-top:12px"><h2>${esc(s.code)} ${esc(s.name||"Unnamed stand")}</h2><span class="pill ${r.color}" id="stand-pill">${RATING[r.color].label} · ${RATING[r.color].action}</span></div>
+      <div id="spanel"></div>
+    </div></div>`;
+  renderRail(); renderCounts(s);
+  $("b-add").onclick=$("b-add2").onclick=()=>{addStand();render();window.scrollTo(0,0)};
+  $("sw").onchange=e=>{S.curStand=e.target.value;saveCache();render();window.scrollTo(0,0)};
+  $("b-prev").onclick=()=>{S.curStand=list[idx-1].uid;render();window.scrollTo(0,0)};
+  $("b-next").onclick=()=>{S.curStand=list[idx+1].uid;render();window.scrollTo(0,0)};
+  V.querySelectorAll(".subtab").forEach(b=>b.onclick=()=>{ui.sub=b.dataset.sub;try{sessionStorage.setItem("je-ui",JSON.stringify({view:ui.view,sub:ui.sub}))}catch(e){};renderStands();window.scrollTo(0,0)});
+  const P=$("spanel");
+  ({details:panelDetails,measure:panelMeasure,checklist:panelChecklist,photos:panelPhotos,action:panelAction})[ui.sub](P,s);
+}
+function renderRail(){
+  const L=$("slist"); if(!L) return;
+  L.innerHTML=orderedStands(S.cur).map(x=>{const r=standRating(x);return `<button class="sitem" type="button" data-u="${x.uid}" aria-current="${x.uid===S.curStand}"><span class="bar ${r.color}"></span><span style="min-width:0"><span class="sname">${esc(x.code)} ${esc(x.name||"Unnamed")}</span><span class="smeta">${TYPES[x.type]} · ${x.m.H?esc(x.m.H)+" ft":"height ?"}</span></span><span class="spct">${r.done}/${r.total}</span></button>`}).join("");
+  L.querySelectorAll(".sitem").forEach(b=>b.onclick=()=>{S.curStand=b.dataset.u;saveCache();render()});
+}
+function renderCounts(s){
+  const r=standRating(s);
+  const set=(k,v)=>{const e=$("n-"+k);if(e)e.textContent=v};
+  set("checklist",`${r.done}/${r.total}`); set("photos",(s.photos||[]).length||""); set("measure",(measuresFor(s).filter(m=>s.m[m.key]!==undefined&&s.m[m.key]!=="").length)+"/"+measuresFor(s).length);
+  const p=$("stand-pill"); if(p){p.className="pill "+r.color;p.textContent=`${RATING[r.color].label} · ${RATING[r.color].action}`}
+  const b=$("prog-bar"); if(b) b.style.width=(r.total?Math.round(100*r.done/r.total):0)+"%";
+  const opt=$("sw")&&$("sw").querySelector(`option[value="${s.uid}"]`); if(opt) opt.textContent=`${s.code} · ${s.name||"Unnamed"} — ${RATING[r.color].label}`;
+  renderRail();
+}
+function changed(s){touchS(s);renderCounts(s)}
+
+function fld(k,l,v,extra=""){return `<div class="field"><label for="s-${k}">${l}</label><input id="s-${k}" data-sk="${k}" value="${esc(v)}" ${extra}></div>`}
+function panelDetails(P,s){
+  P.innerHTML=`<div class="panel pad"><div class="fields">
+    ${fld("code","Stand ID (tag on unit)",s.code)}${fld("name","Description",s.name,'placeholder="e.g. Steel engine stand, 8 ft"')}${fld("location","Location on site",s.location)}
+    <div class="field wide"><label id="lbl-type">Unit type</label><div class="typepick" role="radiogroup" aria-labelledby="lbl-type">${Object.entries(TYPES).map(([k,v])=>`<button type="button" role="radio" aria-checked="${s.type===k}" data-type="${k}"><b>${v}</b><span>${TYPEDESC[k]}</span></button>`).join("")}</div></div>
+    <div class="field wide"><label id="lbl-pos">How is this unit being assessed?</label><div class="typepick two" role="radiogroup" aria-labelledby="lbl-pos">
+      <button type="button" role="radio" aria-checked="${s.pos!=="in"}" data-pos="free"><b>Free-standing</b><span>On its own, not set up at the aircraft or equipment it serves. The report will say work-side fall protection was not evaluated.</span></button>
+      <button type="button" role="radio" aria-checked="${s.pos==="in"}" data-pos="in"><b>In position at the equipment</b><span>Set up where it is used. Adds checks for the work-side gap, open sides and reach.</span></button></div></div>
+    <div class="field wide" ${s.pos==="in"?"":"hidden"}><label for="s-posNote">Equipment it was set up at</label><input id="s-posNote" data-sk="posNote" value="${esc(s.posNote||"")}" placeholder="e.g. C-130H, No. 2 engine, aft position"></div>
+    <div class="field" ${s.type==="FP"?"":"hidden"}><label for="s-access">Access to platform</label><select id="s-access" data-sel="access">${Object.entries(ACCESS).map(([k,v])=>`<option value="${k}" ${s.access===k?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="field"><label for="s-pre">Installed before Jan 17, 2017?</label><select id="s-pre" data-sel="pre2017"><option value="true" ${s.pre2017?"selected":""}>Yes</option><option value="false" ${!s.pre2017?"selected":""}>No</option></select></div>
+    <div class="field"><label for="m-H-d">Top step / platform height</label><div class="minput"><input id="m-H-d" inputmode="decimal" value="${esc(s.m.H??"")}"><span class="unit">ft</span></div></div>
+    ${fld("built","Built by / year",s.built)}${fld("use","Task / how it is used",s.use)}${fld("users","Typical users on unit",s.users,'inputmode="numeric"')}
+  </div>
+  <p class="hint" style="margin:12px 0 0">Type and height decide which checklist items appear, so set both before you rate.</p>
+  <div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="b-tomeas">Next: measurements</button></div></div>`;
+  P.querySelectorAll("[data-sk]").forEach(el=>el.addEventListener("input",()=>{s[el.dataset.sk]=el.value;debounced("s"+s.uid,()=>changed(s),500); if(el.dataset.sk==="name"||el.dataset.sk==="code"){const h=document.querySelector(".shead h2");if(h)h.textContent=`${s.code} ${s.name||"Unnamed stand"}`}}));
+  P.querySelectorAll("[data-pos]").forEach(b=>b.onclick=()=>{const v=b.dataset.pos;if((s.pos||"free")===v)return;s.pos=v;autoAll(s);changed(s);renderStands();if(v==="in")setTimeout(()=>{const f=$("s-posNote");if(f)f.focus()},50)});
+  P.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{if(s.type===b.dataset.type)return;s.type=b.dataset.type;autoAll(s);changed(s);renderStands()});
+  P.querySelectorAll("[data-sel]").forEach(el=>el.addEventListener("change",()=>{const k=el.dataset.sel;s[k]=k==="pre2017"?el.value==="true":el.value;autoAll(s);changed(s);renderStands()}));
+  $("m-H-d").addEventListener("input",e=>{s.m.H=e.target.value.trim();autoAll(s);debounced("s"+s.uid,()=>changed(s),500)});
+  $("m-H-d").addEventListener("change",()=>{changed(s);renderCounts(s)});
+  $("b-tomeas").onclick=()=>{ui.sub="measure";renderStands();window.scrollTo(0,0)};
+}
+function measResults(s,key){
+  const out=[];
+  for(const it of itemsFor(s)){ if(!it.auto||!(AUTO_KEYS[it.auto]||[]).includes(key)) continue; const a=autoCheck(it.id,s); if(!a) continue; out.push(`<span class="${a.s==="C"?"pass":a.s==="NC"?"fail":""}">${a.s==="C"?"✓":a.s==="NC"?"✗":"•"} ${it.id}: ${esc(a.msg)}</span>`) }
+  return out.join("");
+}
+function panelMeasure(P,s){
+  const ms=measuresFor(s);
+  P.innerHTML=`<div class="panel pad"><p class="hint" style="margin:0 0 12px">Enter numbers as you measure. Use decimals for fractions (½ = .5, ¼ = .25, ⅛ = .125). Pass/fail appears under each field and fills the matching checklist item; you can still change any rating. Leave a field blank if it doesn't apply.</p>
+  <div class="mgrid">${ms.map(m=>`<div class="mfield"><label for="m-${m.key}">${esc(m.label)}</label><div class="minput"><input id="m-${m.key}" inputmode="decimal" enterkeyhint="next" data-mk="${m.key}" value="${esc(s.m[m.key]??"")}"><span class="unit">${m.unit}</span></div>${m.hint?`<span class="hint">${esc(m.hint)}</span>`:""}<div class="mres" id="mr-${m.key}">${measResults(s,m.key)}</div></div>`).join("")}</div>
+  <div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="b-tochk">Next: checklist</button></div></div>`;
+  const inputs=[...P.querySelectorAll("[data-mk]")];
+  inputs.forEach((el,i)=>{
+    el.addEventListener("input",()=>{s.m[el.dataset.mk]=el.value.trim();autoAll(s);for(const m of ms){const x=$("mr-"+m.key);if(x)x.innerHTML=measResults(s,m.key)}debounced("s"+s.uid,()=>changed(s),500);});
+    el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const n=inputs[i+1];if(n)n.focus();else el.blur()}});
+    el.addEventListener("change",()=>{changed(s);if(["H","topDepth"].includes(el.dataset.mk)){const before=ms.map(m=>m.key).join();const after=measuresFor(s).map(m=>m.key).join();if(before!==after)setTimeout(()=>{const id=document.activeElement&&document.activeElement.id;panelMeasure(P,s);if(id&&$(id))$(id).focus();toast("Height changed which items apply")},0)}});
+  });
+  $("b-tochk").onclick=()=>{ui.sub="checklist";renderStands();window.scrollTo(0,0)};
+}
+
+function itemVisible(it,s){const r=s.r[it.id];if(ui.filter==="todo")return !(r&&r.s);if(ui.filter==="find")return r&&(r.s==="NC"||r.s==="UV");return true}
+function panelChecklist(P,s){
+  const items=itemsFor(s); const todo=items.filter(i=>!(s.r[i.id]&&s.r[i.id].s)).length; const find=items.filter(i=>s.r[i.id]&&(s.r[i.id].s==="NC"||s.r[i.id].s==="UV")).length;
+  const groups=GROUPS.map(g=>{const gi=items.filter(i=>i.g===g.key&&itemVisible(i,s));if(!gi.length)return"";return `<div class="group"><div class="group-h"><h3>${esc(g.key)}. ${esc(g.name)}</h3><span class="std">${esc(g.std)}</span></div>${gi.map(it=>itemHTML(it,s)).join("")}</div>`}).join("");
+  P.innerHTML=`<div class="panel pad">
+    <div class="filters" role="group" aria-label="Show items">
+      <button class="fchip" type="button" data-f="all" aria-pressed="${ui.filter==="all"}">All ${items.length}</button>
+      <button class="fchip" type="button" data-f="todo" aria-pressed="${ui.filter==="todo"}">To do ${todo}</button>
+      <button class="fchip" type="button" data-f="find" aria-pressed="${ui.filter==="find"}">Findings ${find}</button>
+    </div>
+    ${groups ? groups+`<div class="row" style="margin-top:16px"><button class="btn primary" type="button" id="b-tophoto">Next: photos</button>${todo?`<button class="btn" type="button" id="b-todo">Show the ${todo} left to rate</button>`:""}</div>` : `<div class="empty"><h3>${ui.filter==="todo"?"Every item is rated":"No findings"}</h3><p>${ui.filter==="todo"?"Check the Findings filter, add photos, then set the recommendation.":"No item is rated non-compliant or unable to verify."}</p></div>`}
+  </div>`;
+  P.querySelectorAll(".fchip").forEach(b=>b.onclick=()=>{ui.filter=b.dataset.f;panelChecklist(P,s)});
+  if($("b-tophoto")) $("b-tophoto").onclick=()=>{ui.sub="photos";renderStands();window.scrollTo(0,0)};
+  if($("b-todo")) $("b-todo").onclick=()=>{ui.filter="todo";panelChecklist(P,s);window.scrollTo(0,0)};
+  P.querySelectorAll(".item").forEach(row=>bindItem(row,s,P));
+}
+function itemHTML(it,s){
+  const r=s.r[it.id]||{}; const a=autoCheck(it.id,s); const sev=sevOf(it,r);
+  const open = r.s==="NC"||r.s==="UV"||(r.note&&r.note.length)||ui.notes.has(s.uid+it.id);
+  const nph=(s.photos||[]).filter(p=>(p.caption||"").startsWith(it.id+" ")).length;
+  return `<div class="item" data-item="${it.id}">
+    <div class="item-top"><span class="iid">${it.id}</span><span class="cite">${esc(it.cite)}</span><span class="sevtag ${it.sev}">${it.sev==="red"?"Red if failed":"Yellow if failed"}</span></div>
+    <p class="req">${esc(it.req)}</p>
+    <details class="how"><summary>How to check</summary><p>${esc(it.check)}</p></details>
+    ${a?`<div class="auto ${a.s==="C"?"pass":a.s==="NC"?"fail":""}">Measured: ${esc(a.msg)}${r.auto?" · applied":""}</div>`:""}
+    <div class="seg" role="group" aria-label="Rating for ${it.id}">${["C","NC","UV","NA"].map(k=>`<button type="button" data-s="${k}" aria-pressed="${r.s===k}">${k==="NA"?"N/A":k}<span>${SHORT[k]}</span></button>`).join("")}</div>
+    <div class="extra" ${open?"":"hidden"}><textarea aria-label="Finding for ${it.id}" placeholder="Finding, measurement, location" data-note>${esc(r.note||"")}</textarea>
+      <select aria-label="Severity for ${it.id}" data-sev><option value="red" ${sev==="red"?"selected":""}>Severity: Red</option><option value="yellow" ${sev==="yellow"?"selected":""}>Severity: Yellow</option></select></div>
+    <div class="itools">${open?"":`<button class="linkbtn" type="button" data-opennote>Add note</button>`}<button class="linkbtn" type="button" data-photo>📷 Add photo${nph?` (${nph})`:""}</button></div>
+  </div>`;
+}
+function bindItem(row,s,P){
+  const id=row.dataset.item;
+  row.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+    const r=s.r[id]||{note:"",sev:null}; r.s=(r.s===b.dataset.s)?"":b.dataset.s; r.auto=false; s.r[id]=r;
+    row.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.s===r.s)));
+    const ex=row.querySelector(".extra"); if((r.s==="NC"||r.s==="UV")&&ex.hidden){ex.hidden=false;const o=row.querySelector("[data-opennote]");if(o)o.remove()}
+    const au=row.querySelector(".auto"); if(au) au.textContent=au.textContent.replace(" · applied","");
+    changed(s);
+    if(navigator.vibrate) try{navigator.vibrate(8)}catch(e){}
+    if(ui.filter==="todo"&&r.s) setTimeout(()=>{row.style.transition="opacity .2s";row.style.opacity="0";setTimeout(()=>panelChecklist(P,s),200)},350);
+  }));
+  row.querySelector("[data-note]").addEventListener("input",e=>{const r=s.r[id]||{s:"",sev:null};r.note=e.target.value;s.r[id]=r;debounced("s"+s.uid,()=>changed(s),600)});
+  row.querySelector("[data-sev]").addEventListener("change",e=>{const r=s.r[id]||{s:"",note:""};r.sev=e.target.value;s.r[id]=r;changed(s)});
+  const on=row.querySelector("[data-opennote]"); if(on) on.onclick=()=>{ui.notes.add(s.uid+id);row.querySelector(".extra").hidden=false;on.remove();row.querySelector("[data-note]").focus()};
+  row.querySelector("[data-photo]").onclick=()=>pickPhoto(s,`${id} · `,"cam");
+}
+
+let photoCtx=null;
+function pickPhoto(s,caption,src){photoCtx={sid:s.uid,aid:S.cur,caption};const inp=$(src==="cam"?"f-cam":"f-lib");inp.value="";inp.click()}
+["f-cam","f-lib"].forEach(id=>$(id).addEventListener("change",e=>{if(!photoCtx)return;addPhotos(photoCtx,[...e.target.files]);}));
+function addPhotos(ctx,files){
+  if(!files.length) return; const s=standsOf(ctx.aid)[ctx.sid]; if(!s) return; let left=files.length;
+  toast(files.length>1?`Adding ${files.length} photos…`:"Adding photo…");
+  files.forEach((f,i)=>{const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{const max=1280,sc=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      s.photos=s.photos||[]; s.photos.push({pid:uid(),data:c.toDataURL("image/jpeg",0.72),caption:ctx.caption||""}); done()};img.onerror=done;img.src=rd.result};rd.onerror=done;rd.readAsDataURL(f)});
+  function done(){ if(--left===0){ touchS(s,ctx.aid); toast(`Photo saved to ${s.code}`); if(ui.view==="stands") { if(ui.sub==="photos") renderStands(); else { renderCounts(s); const row=document.querySelector(`.item[data-item="${(ctx.caption||"").split(" ")[0]}"] [data-photo]`); if(row){const n=(s.photos||[]).filter(p=>(p.caption||"").startsWith(ctx.caption.split(" ")[0]+" ")).length;row.textContent=`📷 Add photo (${n})`} } } } }
+}
+function panelPhotos(P,s){
+  P.innerHTML=`<div class="panel pad"><div class="row" style="margin-bottom:12px"><button class="btn primary" type="button" id="b-cam">📷 Take photo</button><button class="btn" type="button" id="b-lib">Choose from library</button></div>
+  <p class="hint" style="margin:0 0 12px">Shoot all four sides with the ID tag visible, then a close-up of each defect. Start a caption with the item ID (for example "C7 · rear-left caster") to link it to a finding.</p>
+  <div class="photos">${(s.photos||[]).length?(s.photos.map((p,i)=>`<div class="photo"><img src="${photoSrc(p)}" alt="${esc(p.caption||"Stand photo")}" loading="lazy"><input aria-label="Photo caption" data-pi="${i}" value="${esc(p.caption)}" placeholder="Caption, e.g. C7 · rear-left caster"><div class="pf"><small>${p.id||mode==="local"?"":"Waiting to upload"}</small><button type="button" data-pd="${i}">Remove</button></div></div>`).join("")):`<p class="hint" style="margin:0">No photos yet.</p>`}</div></div>`;
+  $("b-cam").onclick=()=>pickPhoto(s,"","cam"); $("b-lib").onclick=()=>pickPhoto(s,"","lib");
+  P.querySelectorAll("[data-pi]").forEach(el=>el.addEventListener("input",()=>{s.photos[+el.dataset.pi].caption=el.value;debounced("s"+s.uid,()=>changed(s),600)}));
+  P.querySelectorAll("[data-pd]").forEach(el=>el.onclick=()=>confirmBox("Remove this photo?","It is deleted from the assessment on every device.","Remove",()=>{const p=s.photos[+el.dataset.pd];if(p&&p.id&&assets)assets.delete(p.id).catch(()=>{});s.photos.splice(+el.dataset.pd,1);changed(s);panelPhotos(P,s)}));
+}
+function panelAction(P,s){
+  P.innerHTML=`<div class="panel pad"><div class="fields">
+    <div class="field"><label for="a-type">Corrective action</label><select id="a-type" data-ak="type">${Object.entries(ACTIONS).map(([k,v])=>`<option value="${k}" ${s.action.type===k?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="field"><label for="a-rom">Rough cost (ROM)</label><input id="a-rom" data-ak="rom" value="${esc(s.action.rom)}" placeholder="e.g. $8,000–$12,000"></div>
+    <div class="field wide"><label for="a-desc">What to do</label><textarea id="a-desc" data-ak="desc">${esc(s.action.desc)}</textarea></div>
+    <div class="field wide"><label for="s-rep">Red conditions reported on site to (name, time)</label><input id="s-rep" value="${esc(s.reported||"")}" placeholder="e.g. J. Smith, safety manager, 14:30"></div>
+    <div class="field wide"><label for="s-notes">General notes</label><textarea id="s-notes">${esc(s.notes)}</textarea></div>
+  </div>
+  <div class="row" style="margin-top:14px"><button class="btn" type="button" id="b-dup">Duplicate stand</button><button class="btn danger" type="button" id="b-del">Delete stand</button></div>
+  <p class="hint" style="margin:10px 0 0">Duplicate copies type, measurements and ratings (not photos). Use it for identical units, then adjust what differs.</p></div>`;
+  P.querySelectorAll("[data-ak]").forEach(el=>el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{s.action[el.dataset.ak]=el.value;debounced("s"+s.uid,()=>changed(s),500)}));
+  $("s-notes").addEventListener("input",e=>{s.notes=e.target.value;debounced("s"+s.uid,()=>changed(s),600)});
+  $("s-rep").addEventListener("input",e=>{s.reported=e.target.value;debounced("s"+s.uid,()=>changed(s),600)});
+  $("b-del").onclick=()=>confirmBox(`Delete stand ${s.code}?`,"Its measurements, ratings and photos are removed on every device.","Delete stand",()=>{for(const p of s.photos||[])if(p.id&&assets)assets.delete(p.id).catch(()=>{});const a=curA();delete standsOf(S.cur)[s.uid];a.order=(a.order||[]).filter(x=>x!==s.uid);mark(sPath(S.cur,s.uid),"delete");a.summary=summaryOf(S.cur);touchA(S.cur);S.curStand=null;render()});
+  $("b-dup").onclick=()=>{const c=clone(s);c.uid=uid();c.code=nextCode();c.photos=[];c.name=(s.name||"")+" (copy)";standsOf(S.cur)[c.uid]=c;const a=curA();a.order=[...(a.order||[]),c.uid];S.curStand=c.uid;ui.sub="details";touchS(c);touchA(S.cur);render();window.scrollTo(0,0);toast("Stand duplicated")};
+}
+
+/* ----- Report ----- */
+function reportHTML(a,stands){
+  const M=a.meta; const rows=stands.map(s=>({s,r:standRating(s)}));
+  const cnt={red:0,yellow:0,gray:0,green:0,none:0};rows.forEach(x=>cnt[x.r.color]++);
+  const findings=s=>itemsFor(s).filter(it=>s.r[it.id]&&(s.r[it.id].s==="NC"||s.r[it.id].s==="UV"));
+  const totalNC=rows.reduce((t,x)=>t+x.r.nc,0), totalUV=rows.reduce((t,x)=>t+x.r.uv,0);
+  const rc=c=>c==="none"?"gray":c;
+  const freeS=rows.filter(x=>x.s.pos!=="in").map(x=>x.s), inS=rows.filter(x=>x.s.pos==="in").map(x=>x.s);
+  const codes=a=>a.map(s=>esc(s.code)).join(", ");
+  const allFree=rows.length>0&&!inS.length, allIn=rows.length>0&&!freeS.length;
+  const subj=(a,all)=> all ? (a.length>1?"All units were":"The unit was") : (a.length>1?`Units ${codes(a)} were`:`Unit ${codes(a)} was`);
+  const these=a=> a.length>1?"These units were":"This unit was";
+  let cov="";
+  if(freeS.length) cov+=`${subj(freeS,allFree)} assessed as ${freeS.length>1?"free-standing work stands":"a free-standing work stand"}, not set up at the aircraft or equipment ${freeS.length>1?"they serve":"it serves"}. Fall protection at the work side depends on how a stand fits against that equipment, so these findings do not confirm that employees are protected from falls while working from ${allFree?(freeS.length>1?"these units":"this unit"):(freeS.length>1?"those units":"that unit")}.`;
+  if(inS.length) cov+=`${cov?" ":""}${subj(inS,allIn)} assessed in position at the equipment noted in ${inS.length>1?"each unit's":"its"} section, and the findings apply to that equipment and position only.`;
+  const callout = !rows.length ? "" : `<div class="notice keep"><p><strong>What this assessment covers.</strong> ${cov} See Assessment conditions under Scope and limitations.</p></div>`;
+  const conditions = !rows.length ? "" : `<h3>Assessment conditions: equipment in position</h3>
+   ${freeS.length?`<p><strong>Assessed free-standing${allFree?"":`: ${codes(freeS)}`}.</strong> ${these(freeS)} assessed on ${freeS.length>1?"their":"its"} own, not positioned at the aircraft, vehicle or equipment ${freeS.length>1?"they serve":"it serves"}. A work stand's fall protection depends on how it is used at that equipment: the gap between the deck edge and the equipment surface, which sides are left open to reach the work, the deck height relative to the work, and whether employees must lean over or past the rails to reach it. Those conditions were not evaluated. A rating of Compliant for guardrails, handrails or other edge protection describes the unit as observed and does not confirm that employees are protected from falls while the unit is in use.</p>
+   <p>JE recommends an in-position assessment, with each unit set up at the equipment it serves and used as it is during normal work, before these findings are relied on for fall protection decisions.</p>`:""}
+   ${inS.length?`<p><strong>Assessed in position${allIn?"":`: ${codes(inS)}`}.</strong> ${these(inS)} evaluated while set up at the equipment noted in ${inS.length>1?"each unit's":"its"} section, including the work-side gap, open sides and reach to the work (items J1 to J4). Findings apply to that equipment and position only. Use with other aircraft, equipment, positions or configurations was not evaluated.</p>`:""}`;
+  const prio=[]; rows.forEach(({s})=>itemsFor(s).forEach(it=>{const x=s.r[it.id];if(x&&x.s==="NC"&&sevOf(it,x)==="red")prio.push({s,it,x})}));
+  const pnum=s=>{const m={};(s.photos||[]).forEach((p,i)=>{const k=(p.caption||"").split(/[\s·]/)[0];if(ITEM[k])(m[k]=m[k]||[]).push(i+1)});return m};
+  return `<div class="rlogo"><img src="${LOGO}" alt="JE"><span><b>JE Technology Solutions, Inc.</b><br>Apopka, Florida</span></div><div class="rbar"></div>
+  <p class="small" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700">Fall Protection Compliance Gap Assessment</p>
+  <h1>${esc(M.customer||"Customer")}</h1>
+  <p style="font-size:12pt;margin-top:4pt">${esc(M.site||"")}${M.address?" · "+esc(M.address):""}</p>
+  <dl class="kv" style="margin-top:12pt"><dt>Assessment date</dt><dd>${esc(M.date)}</dd><dt>Reference</dt><dd>${esc(M.ref||"–")}</dd><dt>Customer contact</dt><dd>${esc(M.contact||"–")}</dd><dt>Assessed by</dt><dd>${esc(M.assessor)}, ${esc(M.assessorTitle)}<br>${esc(M.company)}</dd><dt>Standard</dt><dd>29 CFR 1910 Subpart D, Walking-Working Surfaces (1910.22–1910.30)</dd><dt>Units assessed</dt><dd>${rows.length}</dd></dl>
+  <h2 class="keep">Executive summary</h2>
+  <p>${rows.length} unit${rows.length===1?"":"s"} assessed. ${cnt.red} rated Red (remove from service), ${cnt.yellow} Yellow (correct before continued use), ${cnt.gray} Gray (engineering verification needed) and ${cnt.green} Green.${cnt.none?` ${cnt.none} not fully rated.`:""} The assessment recorded ${totalNC} non-compliant item${totalNC===1?"":"s"} and ${totalUV} item${totalUV===1?"":"s"} that could not be verified without engineering data or testing.</p>
+  ${callout}
+  ${M.summaryNote?`<p>${nl(M.summaryNote)}</p>`:""}
+  <div class="tw"><table><thead><tr><th>ID</th><th>Unit</th><th>Type / height</th><th>Rating</th><th>NC</th><th>UV</th><th>Recommendation</th><th>ROM</th></tr></thead><tbody>
+  ${rows.map(({s,r})=>`<tr><td class="mono" style="white-space:nowrap">${esc(s.code)}</td><td>${esc(s.name||"–")}<br><span class="small">${esc(s.location)}</span></td><td>${TYPES[s.type]}${s.m.H?", "+esc(s.m.H)+" ft":""}</td><td class="r-${rc(r.color)}">${RATING[r.color].label}</td><td class="mono">${r.nc}</td><td class="mono">${r.uv}</td><td>${ACTIONS[s.action.type]||"–"}</td><td>${esc(s.action.rom||"–")}</td></tr>`).join("")}
+  </tbody></table></div>
+  ${prio.length?`<h3>Priority findings: remove from service until corrected</h3><div class="tw"><table><thead><tr><th>Unit</th><th>Item</th><th>Requirement</th><th>Finding</th></tr></thead><tbody>${prio.map(({s,it,x})=>`<tr><td class="mono" style="white-space:nowrap">${esc(s.code)}</td><td class="mono">${it.id}<br>${esc(it.cite)}</td><td>${esc(it.req)}</td><td>${esc(x.note||"")}</td></tr>`).join("")}</tbody></table></div>`:""}
+  <div class="keep"><h2>Scope and limitations</h2><p>${nl(M.scope)}</p></div>
+  <div class="keep">${conditions}</div>
+  <div class="keep"><h2>Method and rating key</h2>
+  <p>Each unit was classified by type and height to determine which provisions of 1910.22, 1910.23, 1910.25, 1910.28, 1910.29 and 1910.30 apply. Each applicable item was rated Compliant, Non-compliant, Unable to verify or Not applicable from measurement, observation and interview. Condition observations record defects not tied to a single numbered requirement.</p>
+  <div class="tw"><table class="keep"><thead><tr><th>Unit rating</th><th>Meaning</th><th>Recommended response</th></tr></thead><tbody>
+    <tr><td class="r-red">Red</td><td>At least one non-compliance rated Red severity (fall, collapse or tip-over exposure).</td><td>Tag "Dangerous: Do Not Use" and remove from service until repaired or replaced (1910.23(b)(10), 1910.22(d)(2)).</td></tr>
+    <tr><td class="r-yellow">Yellow</td><td>Non-compliances, none rated Red severity.</td><td>Correct before continued use or on a short, documented schedule.</td></tr>
+    <tr><td class="r-gray">Gray</td><td>No non-compliances found, but load capacity or strength items could not be verified.</td><td>Obtain a PE review or proof-load test.</td></tr>
+    <tr><td class="r-green">Green</td><td>All applicable items compliant or not applicable.</td><td>Keep in service with routine inspection.</td></tr></tbody></table></div></div>
+  ${rows.map(({s,r})=>{const f=findings(s);const pn=pnum(s);const meas=measuresFor(s).filter(m=>s.m[m.key]!==undefined&&s.m[m.key]!=="");
+    return `<section class="pb">
+    <h2>${esc(s.code)} · ${esc(s.name||"Unnamed unit")}</h2>
+    <p><span class="r-${rc(r.color)}">${RATING[r.color].label}: ${RATING[r.color].action}</span> · ${r.done} of ${r.total} items rated · ${r.nc} non-compliant · ${r.uv} unable to verify</p>
+    <dl class="kv"><dt>Type</dt><dd>${TYPES[s.type]}${s.type==="FP"?" · access by "+ACCESS[s.access].toLowerCase():""}</dd><dt>Assessed</dt><dd>${s.pos==="in"?`In position at ${esc(s.posNote||"the equipment it serves")}`:"Free-standing, not at the equipment it serves. Work-side fall protection not evaluated."}</dd><dt>Location</dt><dd>${esc(s.location||"–")}</dd><dt>Built</dt><dd>${esc(s.built||"–")}</dd><dt>Use</dt><dd>${esc(s.use||"–")}</dd><dt>Typical users</dt><dd>${esc(s.users||"–")}</dd></dl>
+    ${(s.photos||[]).length?`<div class="rphotos" style="margin-top:10pt">${s.photos.map((p,i)=>`<figure class="keep"><img src="${photoSrc(p)}" alt="" crossorigin="anonymous"><figcaption><b>Photo ${i+1}</b>${(p.caption||"").replace(/[\s·]+$/,"")?" · "+esc(p.caption.replace(/[\s·]+$/,"")):""}</figcaption></figure>`).join("")}</div>`:""}
+    ${meas.length?`<h3>Measurements</h3><div class="tw"><table><tbody>${meas.map(m=>`<tr><th style="width:55%">${esc(m.label)}</th><td class="mono">${esc(s.m[m.key])} ${m.unit}</td></tr>`).join("")}</tbody></table></div>`:""}
+    <h3>Findings</h3>
+    ${(()=>{const nc=f.filter(it=>s.r[it.id].s==="NC"), uv=f.filter(it=>s.r[it.id].s==="UV");
+      const sevRank=it=>sevOf(it,s.r[it.id])==="red"?0:1; nc.sort((a,b)=>sevRank(a)-sevRank(b));
+      let h="";
+      h+= nc.length?`<div class="tw"><table><thead><tr><th>Item</th><th>Requirement</th><th>Severity</th><th>Finding</th></tr></thead><tbody>${nc.map(it=>{const x=s.r[it.id];const au=autoCheck(it.id,s);return `<tr><td class="mono">${it.id}<br>${esc(it.cite)}</td><td>${esc(it.req)}</td><td class="r-${sevOf(it,x)}">${sevOf(it,x)==="red"?"Red":"Yellow"}</td><td>${esc(x.note||"")}${au&&au.msg?`<br><span class="small">${esc(au.msg)}</span>`:""}${pn[it.id]?`<br><span class="small">See photo ${pn[it.id].join(", ")}</span>`:""}</td></tr>`}).join("")}</tbody></table></div>`:`<p>No non-compliant items recorded.</p>`;
+      if(uv.length){h+=`<h3>Could not be verified (${uv.length})</h3><p class="small">These items need design data, records, testing or a closer inspection before they can be rated.</p><div class="tw"><table class="uvt"><thead><tr><th style="width:9%">Item</th><th style="width:24%">Citation</th><th>Reason</th></tr></thead><tbody>${uv.map(it=>`<tr><td class="mono">${it.id}</td><td>${esc(it.cite)}</td><td>${esc(s.r[it.id].note||"")}${pn[it.id]?` <span class="small">(see photo ${pn[it.id].join(", ")})</span>`:""}</td></tr>`).join("")}</tbody></table></div>`}
+      return h})()}
+    <h3>Recommendation</h3><p><strong>${ACTIONS[s.action.type]||"Not selected"}</strong>${s.action.rom?" · ROM "+esc(s.action.rom):""}</p>
+    ${s.action.desc?`<p>${nl(s.action.desc)}</p>`:""}${s.reported?`<p><strong>Reported on site to:</strong> ${esc(s.reported)}</p>`:""}${s.notes?`<p class="small">${nl(s.notes)}</p>`:""}
+    </section>`}).join("")}
+  <section class="pb"><h2>Appendix: item results by unit</h2>
+  ${rows.map(({s})=>`<h3>${esc(s.code)} · ${esc(s.name||"")}</h3><div class="tw"><table><thead><tr><th style="width:12%">Item</th><th style="width:24%">Citation</th><th>Status</th><th>Notes</th></tr></thead><tbody>${itemsFor(s).map(it=>{const x=s.r[it.id]||{};return `<tr><td class="mono">${it.id}</td><td>${esc(it.cite)}</td><td>${x.s?STATUS[x.s]:"Not rated"}</td><td>${esc(x.note||"")}</td></tr>`}).join("")}</tbody></table></div>`).join("")}
+  <div class="sign keep"><div>${esc(M.assessor)}, ${esc(M.company)}<br>Signature and date</div><div>Customer acknowledgment<br>Signature and date</div></div>
+  <p class="small" style="margin-top:14pt">Prepared with the JE Stand Assessment checklist v${KIT.version} (${KIT.updated}). Regulatory text summarized from 29 CFR 1910 Subpart D; consult the current eCFR for official wording.</p></section>`;
+}
+function renderReportView(){
+  const V=$("v-report"); const a=curA();
+  if(!a){V.innerHTML=`<div class="panel empty"><h3>No assessment open</h3><button class="btn primary" type="button" id="b-x">Go to assessments</button></div>`;$("b-x").onclick=()=>show("info");return}
+  const canPdf = inViewer ? !!downloads : true;
+  V.innerHTML=`<div class="report-tools noprint">
+      ${canPdf?`<button class="btn primary" type="button" id="b-pdf">${inViewer?"Download PDF":"Print / Save as PDF"}</button>`:`<span class="hint">PDF download isn't available in this view. Open this page in a browser on claude.ai.</span>`}
+      <button class="btn" type="button" id="b-bk">${inViewer?"Save backup":"Save assessment file"}</button>
+      <span class="hint">${inViewer?"Builds a letter-size PDF with photos. Large reports take a few seconds on a phone.":"Choose \"Save as PDF\" in the print dialog. Letter size."}</span>
+    </div>
+    ${precheckHTML()}
+    <div class="report-scroll"><article class="report" id="report">${reportHTML(a,orderedStands(S.cur))}</article></div>`;
+  if($("b-pdf")) $("b-pdf").onclick=makePdf;
+  V.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>{const [sid,sub]=b.dataset.jump.split("|");S.curStand=sid;ui.sub=sub;if(sub==="checklist")ui.filter="todo";show("stands")});
+  $("b-bk").onclick=exportBackup;
+  V.querySelectorAll("[data-goinfo]").forEach(b=>b.onclick=()=>{show("info");setTimeout(()=>{const f=$("meta-customer");if(f)f.focus()},60)});
+}
+function precheckHTML(){
+  const a=curA(); const list=orderedStands(S.cur); const iss=[];
+  if(!a.meta.customer) iss.push(`<li>Customer name is blank. <button type="button" data-goinfo>Add it</button></li>`);
+  if(!list.length) iss.push(`<li>No stands added yet.</li>`);
+  for(const s of list){const r=standRating(s);const left=r.total-r.done;
+    if(left) iss.push(`<li>${esc(s.code)} ${esc(s.name||"")}: ${left} item${left>1?"s":""} not rated. <button type="button" data-jump="${s.uid}|checklist">Rate them</button></li>`);
+    if(!s.action.type) iss.push(`<li>${esc(s.code)}: no recommendation chosen. <button type="button" data-jump="${s.uid}|action">Choose one</button></li>`);
+    if(r.color==="red"&&!s.reported) iss.push(`<li>${esc(s.code)} is Red: record who you told on site. <button type="button" data-jump="${s.uid}|action">Add it</button></li>`);}
+  const nfree=list.filter(s=>s.pos!=="in").length;
+  const info = nfree ? `<p class="hint" style="margin:8px 0 0">${nfree===list.length?"All":nfree} unit${nfree>1?"s were":" was"} assessed free-standing. The report states that work-side fall protection at the equipment was not evaluated. To assess a unit in position, set it on its Details tab.</p>` : "";
+  for(const s of list) if(s.pos==="in"&&!s.posNote) iss.push(`<li>${esc(s.code)} was assessed in position: name the equipment. <button type="button" data-jump="${s.uid}|details">Add it</button></li>`);
+  const local = inViewer ? "" : `<p class="hint" style="margin:8px 0 0">This copy saves on this device only. To send this assessment to the office, use <b>Save assessment file</b> and email the file.</p>`;
+  if(!iss.length) return `<div class="precheck ok noprint"><h3>Ready to send</h3><p class="hint" style="margin:0">Every stand is fully rated and has a recommendation.</p>${info}${local}</div>`;
+  return `<div class="precheck noprint"><h3>Before you send</h3><ul>${iss.slice(0,12).join("")}${iss.length>12?`<li>…and ${iss.length-12} more</li>`:""}</ul><p class="hint" style="margin:6px 0 0">You can still download the report; unrated items show as "Not rated".</p>${info}${local}</div>`;
+}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>{s.remove();rej(new Error("load"))};document.head.appendChild(s)})}
+async function ensurePdfLib(){ if(window.html2pdf) return; for(const u of PDF_SRC){ try{await loadScript(u); if(window.html2pdf) return}catch(e){} } throw new Error("lib") }
+let pdfBusy=false;
+async function makePdf(){
+  if(!inViewer){ window.print(); return; }
+  if(pdfBusy) return; pdfBusy=true; const btn=$("b-pdf"); const lbl=btn.textContent; btn.disabled=true; btn.textContent="Building PDF…";
+  try{
+    await ensurePdfLib();
+    const a=curA(); const host=$("pdf-host"); host.innerHTML=`<article class="report pdfmode">${reportHTML(a,orderedStands(S.cur))}</article>`;
+    await Promise.all([...host.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+    const name=`JE-Fall-Protection-Assessment-${(a.meta.customer||"customer").replace(/[^a-z0-9]+/gi,"-")}-${a.meta.date||""}.pdf`.replace(/-+/g,"-");
+    const blob=await window.html2pdf().set({margin:[0.5,0.5,0.55,0.5],image:{type:"jpeg",quality:0.9},html2canvas:{scale:Math.min(2,Math.max(1.5,window.devicePixelRatio||1)),useCORS:true,backgroundColor:"#ffffff"},jsPDF:{unit:"in",format:"letter",orientation:"portrait"},pagebreak:{mode:["css","legacy"],before:".pb",avoid:["tr",".keep","figure","h2","h3","p","dl"]}}).from(host.firstElementChild).outputPdf("blob");
+    host.innerHTML="";
+    await downloads.save({filename:name,data:blob});
+    toast("PDF saved");
+  }catch(e){
+    const c=e&&e.code;
+    if(c==="declined") {} else if(c==="rate_limited") toast("A save prompt is already open.");
+    else if(e&&e.message==="lib") toast("Couldn't load the PDF builder. Check your connection and try again.");
+    else toast("Couldn't build the PDF. Try again, or save a backup and build it on a laptop.");
+  }finally{ pdfBusy=false; btn.disabled=false; btn.textContent=lbl; $("pdf-host").innerHTML=""; }
+}
+
+/* ---------- backup ---------- */
+async function blobToData(url){try{const b=await (await fetch(url)).blob();return await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=()=>r(null);fr.readAsDataURL(b)})}catch(e){return null}}
+async function exportBackup(){
+  const a=curA(); if(!a){toast("Open an assessment first");return}
+  toast("Preparing backup…");
+  const stands=clone(orderedStands(S.cur));
+  for(const s of stands) for(const p of s.photos||[]) if(p.id&&!p.data){p.data=await blobToData("/_blob/"+p.id)}
+  const out=JSON.stringify({kind:"je-stand-assessment",version:2,exported:new Date().toISOString(),meta:a.meta,stands});
+  const nm=`je-stand-assessment-${(a.meta.customer||"assessment").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-${a.meta.date||"undated"}.json`;
+  if(inViewer){ if(!downloads){toast("Saving files isn't available in this view");return} try{await downloads.save({filename:nm,data:out});toast("Backup saved")}catch(e){if(e&&e.code!=="declined")toast("Couldn't save the backup")} }
+  else { try{const blob=new Blob([out],{type:"application/json"});const l=document.createElement("a");l.href=URL.createObjectURL(blob);l.download=nm;document.body.appendChild(l);l.click();setTimeout(()=>{URL.revokeObjectURL(l.href);l.remove()},500);toast("Backup saved")}catch(e){toast("Couldn't save the backup")} }
+}
+function importBackup(d,quiet){
+  if(!d||!d.meta||!Array.isArray(d.stands)) throw new Error("bad");
+  const aid=uid(); const order=[]; const map={};
+  for(const s0 of d.stands){ const s=Object.assign(blankStand(s0.code||"S-01"),clone(s0)); s.uid=s0.uid&&!map[s0.uid]?s0.uid:uid(); s.photos=(s0.photos||[]).filter(p=>p.data).map(p=>({pid:uid(),data:p.data,caption:p.caption||""})); map[s.uid]=s; order.push(s.uid) }
+  S.list[aid]={meta:Object.assign(blankMeta(),d.meta),order,created:Date.now(),updated:Date.now(),example:!!d.example,summary:{}}; S.stands[aid]=map;
+  S.list[aid].summary=summaryOf(aid);
+  mark(aPath(aid)); for(const id of order) mark(sPath(aid,id));
+  S.cur=aid; S.curStand=null; saveCache(); subscribeStands();
+  if(!quiet){ render(); toast(inViewer?"Backup opened as a new assessment":"Assessment file opened as a new assessment"); }
+}
+$("f-import").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{importBackup(JSON.parse(rd.result))}catch(err){toast("That file isn't a JE stand assessment backup")}};rd.readAsText(f);e.target.value=""});
+
+/* ---------- menu, modal, toast, wake lock ---------- */
+$("b-menu").onclick=()=>{
+  const root=$("modal-root");
+  root.innerHTML=`<div class="sheet" id="sheet"><div class="box" role="dialog" aria-modal="true" aria-label="More options">
+    <button class="btn" type="button" data-m="new">New assessment</button>
+    <button class="btn" type="button" data-m="bk">${inViewer?"Save backup of this assessment":"Save assessment file (to send or back up)"}</button>
+    <button class="btn" type="button" data-m="imp">${inViewer?"Open a backup file":"Open an assessment file"}</button>
+    <button class="btn" type="button" data-m="guide">How it works</button>
+    <button class="btn" type="button" data-m="wake">${wake?"Let screen sleep":"Keep screen on while inspecting"}</button>
+    <p class="hint" style="margin:4px 2px">${mode==="db"?"Assessments sync to every device you open this page on. Changes made without signal are kept on this phone and upload later.":"Work is saved in this browser only."} Checklist v${KIT.version} (${KIT.updated}).</p>
+    <button class="btn" type="button" data-m="close" style="justify-content:center">Close</button></div></div>`;
+  const close=()=>root.innerHTML="";
+  $("sheet").onclick=e=>{if(e.target.id==="sheet")close()};
+  root.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{const m=b.dataset.m;close();if(m==="new")newAssessment();if(m==="bk")exportBackup();if(m==="imp")$("f-import").click();if(m==="wake")toggleWake();if(m==="guide"){guideHidden=false;try{localStorage.removeItem("je-guide-hide")}catch(e){}show("info")}});
+};
+function confirmBox(title,msg,okLabel,onOk){
+  const root=$("modal-root");
+  root.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="box"><h3 id="mt" style="font-size:22px">${esc(title)}</h3><p>${esc(msg)}</p><div class="row" style="justify-content:flex-end"><button class="btn" type="button" id="m-no">Cancel</button><button class="btn primary" type="button" id="m-ok">${esc(okLabel)}</button></div></div></div>`;
+  const close=()=>{root.innerHTML=""};$("m-no").onclick=close;$("m-ok").onclick=()=>{close();onOk()};$("m-ok").focus();
+}
+let toastT;function toast(t){let el=document.querySelector(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}el.textContent=t;clearTimeout(toastT);toastT=setTimeout(()=>el.remove(),2800)}
+let wake=null, wakeWanted=false;
+async function requestWake(){ if(!wakeWanted||wake||!navigator.wakeLock) return; try{wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}catch(e){wake=null} }
+async function toggleWake(){ if(wake){wakeWanted=false;try{await wake.release()}catch(e){}wake=null;toast("Screen can sleep");return} wakeWanted=true; await requestWake(); toast(wake?"Screen stays on while this page is open":"This device won't keep the screen on from here") }
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){requestWake();if(mode==="db"){failCount=0;scheduleFlush(200)}}});
+
+/* hide the bottom tab bar while the on-screen keyboard is up */
+function kbCheck(){const ae=document.activeElement;const inp=!!(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&!/^(file|checkbox|radio|button)$/.test(ae.type||""));const vv=window.visualViewport;const shrunk=vv?vv.height<window.innerHeight*0.8:inp;document.body.classList.toggle("typing",inp&&shrunk)}
+document.addEventListener("focusin",()=>setTimeout(kbCheck,250));
+document.addEventListener("focusout",()=>setTimeout(kbCheck,150));
+if(window.visualViewport) window.visualViewport.addEventListener("resize",kbCheck);
+/* header height for sticky offsets */
+function setHdr(){document.documentElement.style.setProperty("--hdr",$("top").offsetHeight+"px")}
+try{new ResizeObserver(setHdr).observe($("top"))}catch(e){window.addEventListener("resize",setHdr)}
+setHdr();
+
+/* ---------- example (standalone file only) ---------- */
+function exampleAssessment(){
+  const s=blankStand("EX-1");
+  Object.assign(s,{name:"EXAMPLE – Shop-built steel work platform",location:"Hangar 2, bay C",type:"MP",access:"none",built:"Approx. 2001, built in-house",use:"Engine cowl access, 1–2 technicians with hand tools",users:"2"});
+  s.m={H:"8",baseMin:"48",stepWidth:"18",riseMax:"11",riseMin:"9.5",depthMin:"7.5",stringerAngle:"62",stepRail:"33",platRail:"38",mil:"500",unitWt:"420",casters:"4",casterRating:"300"};
+  const set=(id,st,note,sev)=>{s.r[id]={s:st,note:note||"",sev:sev||null,auto:false}};
+  set("A1","NC","Two deck plate seams lifted ~1/8 in at the step landing.");set("A2","UV","No drawings, rating or calculations available.");set("A3","C");set("A4","NC","No inspection records or tags.");set("A5","C");set("A6","NC","Added gusset at rear leg, welder unknown.");
+  set("C2","NC","Diamond plate worn smooth on top two steps.");set("C3","UV","No design data.");set("C7","NC","Two of four casters have no brake.","red");set("C8","NC","Unit walked about 2 in under hand push with brakes set.");set("C14","NC","No midrails on any side; top rail 38 in.");set("I1","NC","Cracked fillet weld at front-left leg to base angle.");set("I5","NC","No rated load or ID marking.");
+  s.action={type:"replace",desc:"Replace with JE aluminum mobile platform: 8 ft deck, 42 in yellow powder-coated rails with midrails and toeboards, swivel locking casters, diamond plate deck.",rom:"Request quote"};
+  autoAll(s);
+  return {kind:"je-stand-assessment",version:2,example:true,meta:Object.assign(blankMeta(),{customer:"EXAMPLE Customer",site:"Example facility",contact:"Safety manager",ref:"EX-0001"}),stands:[s]};
+}
+
+/* ---------- boot ---------- */
+(function boot(){
+  try{const u=JSON.parse(sessionStorage.getItem("je-ui")||"null");if(u){ui.view=u.view||"info";ui.sub=u.sub||"checklist"}}catch(e){}
+  const had=loadCache();
+  if(!inViewer){
+    mode="local";
+    if(!had && !migrateV1()) { importBackup(exampleAssessment(),true); }
+    dirty.clear(); saveCache(); render(); return;
+  }
+  render();
+  (async()=>{
+    try{ db = await window.claude.use("db"); }catch(e){ db=null }
+    if(!db){ mode="local"; if(!had&&!Object.keys(S.list).length) {} render(); return; }
+    mode="db";
+    try{ assets = await window.claude.use("assets"); }catch(e){ assets=null }
+    try{ downloads = await window.claude.use("downloads"); }catch(e){ downloads=null }
+    startSync(); scheduleFlush(200); render();
+  })();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); }); }
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+</script>
+</body>
+</html>
